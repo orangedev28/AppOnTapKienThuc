@@ -20,7 +20,7 @@ class QuizListApp extends StatelessWidget {
           // Example:
           ListTile(
             title: Text(
-              'Bài test 1',
+              'Bài Test 1',
               style: TextStyle(
                 fontSize: 20.0, // Set the desired font size
                 color: Colors.green, // Set the desired color
@@ -36,7 +36,7 @@ class QuizListApp extends StatelessWidget {
           ),
           ListTile(
             title: Text(
-              'Bài test 2',
+              'Bài Test 2',
               style: TextStyle(
                 fontSize: 20.0, // Set the desired font size
                 color: Colors.green, // Set the desired color
@@ -88,14 +88,15 @@ class _QuizAppState extends State<QuizApp> {
       'isCorrect': false,
     },
     {
-      'question': 'Question 3: Anh Lộc tên đầy đủ là gì?',
+      'question':
+          'Question 3: Widget là khái niệm quan trọng trong Flutter, nó được sử dụng để làm gì?',
       'answers': [
-        'A. Đào Bá Lộc',
-        'B. Nguyễn Sơn Lộc',
-        'C. Huỳnh Văn Lộc',
-        'D. Lê Hoài Lộc'
+        'A. Xây dựng giao diện người dùng',
+        'B. Quản lý trạng thái ứng dụng',
+        'C. Thực hiện các hiệu ứng tinh tế',
+        'D. Tối ưu hóa hiệu suất ứng dụng'
       ],
-      'correctAnswer': 'D. Lê Hoài Lộc',
+      'correctAnswer': 'A. Xây dựng giao diện người dùng',
       'selectedAnswer': '',
       'isCorrect': false,
     },
@@ -270,7 +271,7 @@ class _QuizAppState extends State<QuizApp> {
       home: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Bài Test Trắc Nghiệm',
+            'Bài Test 1',
             style: TextStyle(fontSize: 22),
           ),
         ),
@@ -341,16 +342,26 @@ class _QuizAppState extends State<QuizApp> {
                         String correctAnswer =
                             questions[index]['correctAnswer'];
 
+                        String answerText;
+                        Color answerColor;
+
+                        if (correctAnswer != selectedAnswer) {
+                          answerText =
+                              'Câu trả lời sai: $selectedAnswer\nĐáp án đúng: $correctAnswer';
+                          answerColor = Colors.red;
+                        } else {
+                          answerText = 'Đúng: $correctAnswer';
+                          answerColor = Colors.green;
+                        }
+
                         return ListTile(
                           title: Text(
                             questions[index]['question'],
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
-                            'Đúng: $correctAnswer\nTrả lời của bạn: $selectedAnswer',
-                            style: TextStyle(
-                              color: isCorrect ? Colors.green : Colors.red,
-                            ),
+                            answerText,
+                            style: TextStyle(color: answerColor),
                           ),
                         );
                       },
