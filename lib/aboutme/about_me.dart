@@ -38,6 +38,17 @@ class AboutMe extends StatelessWidget {
                 Text("Lê Hoài Lộc - 2011063439 - 0333413698"),
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  width: 360.0,
+                  height: 220.0,
+                  'assets/images/lake.png', // Thay đổi đường dẫn ảnh tại đây
+                  fit: BoxFit.cover,
+                ),
+              ],
+            ),
           ],
         ),
       ),

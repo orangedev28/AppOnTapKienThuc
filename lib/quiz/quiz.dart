@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(QuizListApp());
-}
-
 class QuizListApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -289,15 +285,16 @@ class _QuizAppState extends State<QuizApp> {
                 ...questions[currentQuestionIndex]['answers'].map((answer) {
                   bool isSelected = answer ==
                       questions[currentQuestionIndex]['selectedAnswer'];
-                  bool isCorrect = isSelected &&
-                      questions[currentQuestionIndex]['isCorrect'];
 
                   return ElevatedButton(
                     child: Text(answer),
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all<Color?>(
                         isSelected
-                            ? (isCorrect ? Colors.green : Colors.red)
+                            ? (isSelected &&
+                                    questions[currentQuestionIndex]['isCorrect']
+                                ? Colors.green
+                                : Colors.red)
                             : null,
                       ),
                     ),
@@ -336,7 +333,6 @@ class _QuizAppState extends State<QuizApp> {
                       physics: NeverScrollableScrollPhysics(),
                       itemCount: questions.length,
                       itemBuilder: (context, index) {
-                        bool isCorrect = questions[index]['isCorrect'];
                         String selectedAnswer =
                             questions[index]['selectedAnswer'];
                         String correctAnswer =

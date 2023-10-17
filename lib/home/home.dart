@@ -1,27 +1,8 @@
 import 'package:app_ontapkienthuc/document/viewpdf.dart';
-import 'package:app_ontapkienthuc/quiz/quiz.dart';
 import 'package:flutter/material.dart';
+import 'package:app_ontapkienthuc/quiz/quiz.dart';
 
 Color mySkyBlueColor = Color.fromRGBO(135, 206, 235, 1);
-
-Route _createRoute() {
-  return PageRouteBuilder(
-    pageBuilder: (BuildContext context, Animation<double> animation,
-        Animation<double> secondaryAnimation) {
-      return PagePDF();
-    },
-    transitionsBuilder: (BuildContext context, Animation<double> animation,
-        Animation<double> secondaryAnimation, Widget child) {
-      return child;
-    },
-  );
-}
-
-Route<dynamic> _createQuizRoute() {
-  return MaterialPageRoute(
-    builder: (BuildContext context) => QuizApp(),
-  );
-}
 
 class Home extends StatelessWidget {
   @override
@@ -87,7 +68,11 @@ class Home extends StatelessWidget {
                           backgroundColor: mySkyBlueColor,
                         ),
                         onPressed: () {
-                          Navigator.of(context).push(_createRoute());
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => PDFList(),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -113,7 +98,11 @@ class Home extends StatelessWidget {
                           backgroundColor: mySkyBlueColor,
                         ),
                         onPressed: () {
-                          Navigator.of(context).push(_createRoute());
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => PDFList(),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -139,7 +128,11 @@ class Home extends StatelessWidget {
                           backgroundColor: mySkyBlueColor,
                         ),
                         onPressed: () {
-                          Navigator.of(context).push(_createRoute());
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => PDFList(),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -165,7 +158,11 @@ class Home extends StatelessWidget {
                           backgroundColor: mySkyBlueColor,
                         ),
                         onPressed: () {
-                          Navigator.of(context).push(_createRoute());
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => PDFList(),
+                            ),
+                          );
                         },
                       ),
                     ),

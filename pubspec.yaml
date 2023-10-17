@@ -28,12 +28,17 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+
   flutter:
     sdk: flutter
 
+  path_provider: ^2.0.2
+
   http: ^1.1.0
   fluttertoast: any
-  flutter_pdfview: ^1.0.0
+  
+  flutter_pdfview: ^1.2.1
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
 
@@ -56,9 +61,9 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - D:\flutterapp\appvscode\app_ontapkienthuc\assets\thuhoachkhang.pdf
+    - assets/images/lake.png
+    - assets/pdf/
 
-    
   uses-material-design: true
 
   # The following line ensures that the Material Icons font is
