@@ -1,5 +1,5 @@
+import "package:app_ontapkienthuc/account/my_account.dart";
 import 'package:flutter/material.dart';
-import 'package:app_ontapkienthuc/home.dart';
 import "package:http/http.dart" as http;
 import "package:fluttertoast/fluttertoast.dart";
 import "dart:convert";
@@ -14,32 +14,50 @@ class RegisterForm extends StatefulWidget {
 class _RegisterForm extends State<RegisterForm> {
   TextEditingController username = TextEditingController();
   TextEditingController password = TextEditingController();
+  TextEditingController repeatpassword = TextEditingController();
 
-  Future login(BuildContext cont) async {
-    if (username.text == "" || password.text == "") {
+  Future register(BuildContext cont) async {
+    if (username.text == "" ||
+        password.text == "" ||
+        repeatpassword.text == "") {
       Fluttertoast.showToast(
-        msg: "Both fields cannot be blank!",
+        msg: "All fields cannot be blank!",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
         fontSize: 16.0,
       );
     } else {
-      final uri = Uri.parse(
-          "http://10.0.149.216:8080/localconnect/AppOnTapWithMySQL.php");
-      http.Response response = await http.post(uri, body: {
-        "username": username.text,
-        "password": password.text,
-      });
+      if (password.text == repeatpassword.text) {
+        final uri =
+            Uri.parse("http://10.0.149.216:8080/localconnect/register.php");
+        http.Response response = await http.post(uri, body: {
+          "username": username.text,
+          "password": password.text,
+        });
 
-      var data = json.decode(response.body);
-      if (data == "success") {
-        Navigator.push(
-          cont,
-          MaterialPageRoute(builder: (BuildContext context) => MyHomePage()),
-        );
+        var data = json.decode(response.body);
+        if (data == "success") {
+          Fluttertoast.showToast(
+            msg: "Registration success!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            fontSize: 16.0,
+          );
+          Navigator.push(
+            cont,
+            MaterialPageRoute(builder: (BuildContext context) => MyAccount()),
+          );
+        } else {
+          Fluttertoast.showToast(
+            msg: "Registration failed!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            fontSize: 16.0,
+          );
+        }
       } else {
         Fluttertoast.showToast(
-          msg: "The user and password combination does not exist!",
+          msg: "Both password have to be the same!",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           fontSize: 16.0,
@@ -118,7 +136,7 @@ class _RegisterForm extends State<RegisterForm> {
                     Container(
                       margin: const EdgeInsets.only(left: 16, right: 32),
                       child: TextField(
-                        controller: password,
+                        controller: repeatpassword,
                         obscureText: true,
                         decoration: InputDecoration(
                           hintStyle: TextStyle(fontSize: 22),
@@ -159,7 +177,7 @@ class _RegisterForm extends State<RegisterForm> {
                   child: IconButton(
                     color: Colors.white,
                     onPressed: () {
-                      login(context);
+                      register(context);
                     },
                     icon: Icon(
                       Icons.arrow_forward,
@@ -186,7 +204,7 @@ class _RegisterForm extends State<RegisterForm> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => MyHomePage(),
+                      builder: (context) => MyAccount(),
                     ),
                   );
                 },

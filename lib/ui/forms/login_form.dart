@@ -25,8 +25,8 @@ class _LoginFormState extends State<LoginForm> {
         fontSize: 16.0,
       );
     } else {
-      final uri = Uri.parse(
-          "http://10.0.149.216:8080/localconnect/AppOnTapWithMySQL.php");
+      final uri =
+          Uri.parse("http://10.0.149.216:8080/localconnect/loginApp.php");
       http.Response response = await http.post(uri, body: {
         "username": username.text,
         "password": password.text,
