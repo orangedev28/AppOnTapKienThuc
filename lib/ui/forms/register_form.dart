@@ -1,18 +1,17 @@
-import "package:app_ontapkienthuc/account/register_account.dart";
 import 'package:flutter/material.dart';
 import 'package:app_ontapkienthuc/home.dart';
 import "package:http/http.dart" as http;
 import "package:fluttertoast/fluttertoast.dart";
 import "dart:convert";
 
-class LoginForm extends StatefulWidget {
-  const LoginForm({Key? key}) : super(key: key);
+class RegisterForm extends StatefulWidget {
+  const RegisterForm({Key? key}) : super(key: key);
 
   @override
-  State<LoginForm> createState() => _LoginFormState();
+  State<RegisterForm> createState() => _RegisterForm();
 }
 
-class _LoginFormState extends State<LoginForm> {
+class _RegisterForm extends State<RegisterForm> {
   TextEditingController username = TextEditingController();
   TextEditingController password = TextEditingController();
 
@@ -57,7 +56,7 @@ class _LoginFormState extends State<LoginForm> {
         Container(
           margin: const EdgeInsets.only(bottom: 60),
           child: const Text(
-            "Đăng Nhập",
+            "Đăng Ký Tài Khoản",
             style: TextStyle(
               fontSize: 35,
               fontWeight: FontWeight.bold,
@@ -116,6 +115,19 @@ class _LoginFormState extends State<LoginForm> {
                         ),
                       ),
                     ),
+                    Container(
+                      margin: const EdgeInsets.only(left: 16, right: 32),
+                      child: TextField(
+                        controller: password,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          hintStyle: TextStyle(fontSize: 22),
+                          border: InputBorder.none,
+                          icon: Icon(Icons.account_circle_rounded),
+                          hintText: "Xác nhận mật khẩu",
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -159,22 +171,6 @@ class _LoginFormState extends State<LoginForm> {
           ),
         ),
         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(right: 16, top: 16),
-              child: Text(
-                "Quên mật khẩu ?",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[400],
-                ),
-              ),
-            ),
-          ],
-        ),
-        Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Container(
@@ -190,11 +186,11 @@ class _LoginFormState extends State<LoginForm> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => RegisterAccount(),
+                      builder: (context) => MyHomePage(),
                     ),
                   );
                 },
-                child: const Text("Đăng ký"),
+                child: const Text("Đăng nhập"),
               ),
             ),
           ],

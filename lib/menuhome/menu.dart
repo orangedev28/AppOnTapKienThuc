@@ -1,10 +1,10 @@
 import 'package:app_ontapkienthuc/document/viewpdf.dart';
-import 'package:flutter/material.dart';
 import 'package:app_ontapkienthuc/quiz/quiz.dart';
+import 'package:flutter/material.dart';
 
 Color mySkyBlueColor = Color.fromRGBO(135, 206, 235, 1);
 
-class Home extends StatelessWidget {
+class MenuHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
