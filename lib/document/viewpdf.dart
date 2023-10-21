@@ -1,12 +1,57 @@
 import 'dart:async';
 import 'dart:io';
-
+import "package:http/http.dart" as http;
+import "dart:convert";
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 
-class PDFList extends StatelessWidget {
+class PDFList extends StatefulWidget {
+  @override
+  _PDFList createState() => _PDFList();
+}
+
+class _PDFList extends State<PDFList> {
+  List<Map<String, String>> documents = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDocuments().then((data) {
+      setState(() {
+        documents = data ?? [];
+      });
+    });
+  }
+
+  Future<List<Map<String, String>>?> fetchDocuments() async {
+    final uri =
+        Uri.parse("http://10.0.149.216:8080/localconnect/documents.php");
+    http.Response response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      try {
+        final data = jsonDecode(response.body);
+
+        if (data is List) {
+          return data
+              .map<Map<String, String>>((item) => {
+                    'namedocument': item['namedocument'].toString(),
+                    'linkdocument': item['linkdocument'].toString(),
+                  })
+              .toList();
+        } else {
+          throw Exception('Response is not a list');
+        }
+      } catch (e) {
+        throw Exception('Failed to parse JSON');
+      }
+    } else {
+      throw Exception('Failed to connect to the server');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,49 +62,36 @@ class PDFList extends StatelessWidget {
         ),
       ),
       body: ListView(
-        children: [
-          // List of _createQuizRoute()
-          // Example:
-          ListTile(
+        children: documents.map((document) {
+          return ListTile(
             title: Text(
-              'Tài liệu 1',
+              document['namedocument'] ?? 'Tên tài liệu',
               style: TextStyle(
-                fontSize: 20.0, // Set the desired font size
-                color: Colors.green, // Set the desired color
+                fontSize: 20.0,
+                color: Colors.green,
               ),
             ),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => ViewPDF(),
+                  builder: (context) => ViewPDF(
+                      documentLink: document['linkdocument'],
+                      documentName: document['namedocument']),
                 ),
               );
             },
-          ),
-          ListTile(
-            title: Text(
-              'Tài liệu 2',
-              style: TextStyle(
-                fontSize: 20.0, // Set the desired font size
-                color: Colors.green, // Set the desired color
-              ),
-            ),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ViewPDF(),
-                ),
-              );
-            },
-          ),
-          // Add more ListTiles for each quiz
-        ],
+          );
+        }).toList(),
       ),
     );
   }
 }
 
 class ViewPDF extends StatefulWidget {
+  final String? documentLink;
+  final String? documentName;
+  ViewPDF({this.documentLink, this.documentName});
+
   @override
   _ViewPDF createState() => _ViewPDF();
 }
@@ -70,19 +102,25 @@ class _ViewPDF extends State<ViewPDF> {
   @override
   void initState() {
     super.initState();
-    fromAsset('assets/pdf/giaotrinhC.pdf', 'giaotrinhC.pdf').then((f) {
-      setState(() {
-        pathPDF = f.path;
-        if (pathPDF.isNotEmpty) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PDFScreen(path: pathPDF),
-            ),
-          );
-        }
+    final documentLink = widget.documentLink;
+    if (documentLink != null) {
+      fromAsset(documentLink, 'downloaded.pdf').then((f) {
+        setState(() {
+          pathPDF = f.path;
+          if (pathPDF.isNotEmpty) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PDFScreen(
+                  path: pathPDF,
+                  documentName: widget.documentName,
+                ),
+              ),
+            );
+          }
+        });
       });
-    });
+    }
   }
 
   Future<File> fromAsset(String asset, String filename) async {
@@ -90,12 +128,13 @@ class _ViewPDF extends State<ViewPDF> {
     try {
       var dir = await getApplicationDocumentsDirectory();
       File file = File("${dir.path}/$filename");
+
       var data = await rootBundle.load(asset);
       var bytes = data.buffer.asUint8List();
       await file.writeAsBytes(bytes, flush: true);
       completer.complete(file);
     } catch (e) {
-      throw Exception('Error parsing asset file!');
+      throw Exception('Error loading the asset file: $e');
     }
 
     return completer.future;
@@ -127,14 +166,15 @@ class _ViewPDF extends State<ViewPDF> {
 
 class PDFScreen extends StatefulWidget {
   final String? path;
+  final String? documentName;
 
-  const PDFScreen({Key? key, this.path}) : super(key: key);
+  const PDFScreen({Key? key, this.path, this.documentName}) : super(key: key);
 
   @override
-  _PDFScreenState createState() => _PDFScreenState();
+  _PDFScreen createState() => _PDFScreen();
 }
 
-class _PDFScreenState extends State<PDFScreen> with WidgetsBindingObserver {
+class _PDFScreen extends State<PDFScreen> with WidgetsBindingObserver {
   final Completer<PDFViewController> _controller =
       Completer<PDFViewController>();
   int? pages = 0;
@@ -146,7 +186,10 @@ class _PDFScreenState extends State<PDFScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("PDF test"),
+        title: Text(
+          widget.documentName ?? 'Tên tài liệu',
+          style: TextStyle(fontSize: 22),
+        ),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.share),

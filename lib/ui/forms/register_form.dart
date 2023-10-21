@@ -21,7 +21,7 @@ class _RegisterForm extends State<RegisterForm> {
         password.text == "" ||
         repeatpassword.text == "") {
       Fluttertoast.showToast(
-        msg: "All fields cannot be blank!",
+        msg: "Các trường không được để trống!",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
         fontSize: 16.0,
@@ -38,7 +38,7 @@ class _RegisterForm extends State<RegisterForm> {
         var data = json.decode(response.body);
         if (data == "success") {
           Fluttertoast.showToast(
-            msg: "Registration success!",
+            msg: "Đăng ký tài khoản thành công!",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.CENTER,
             fontSize: 16.0,
@@ -49,7 +49,7 @@ class _RegisterForm extends State<RegisterForm> {
           );
         } else {
           Fluttertoast.showToast(
-            msg: "Registration failed!",
+            msg: "Đăng ký thất bại!",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.CENTER,
             fontSize: 16.0,
@@ -57,7 +57,7 @@ class _RegisterForm extends State<RegisterForm> {
         }
       } else {
         Fluttertoast.showToast(
-          msg: "Both password have to be the same!",
+          msg: "Xác nhận mật khẩu thất bại!",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           fontSize: 16.0,

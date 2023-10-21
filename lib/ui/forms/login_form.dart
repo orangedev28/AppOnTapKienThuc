@@ -19,7 +19,7 @@ class _LoginFormState extends State<LoginForm> {
   Future login(BuildContext cont) async {
     if (username.text == "" || password.text == "") {
       Fluttertoast.showToast(
-        msg: "Both fields cannot be blank!",
+        msg: "Cả hai trường không được để trống!",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
         fontSize: 16.0,
@@ -40,7 +40,7 @@ class _LoginFormState extends State<LoginForm> {
         );
       } else {
         Fluttertoast.showToast(
-          msg: "The user and password combination does not exist!",
+          msg: "Tài khoản hoặc mật khẩu không chính xác!",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           fontSize: 16.0,

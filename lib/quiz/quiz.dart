@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+//import 'package:timer_builder/timer_builder.dart'; // thư viện đếm ngược
 
 class QuizListApp extends StatelessWidget {
   @override
@@ -59,6 +60,8 @@ class QuizApp extends StatefulWidget {
 }
 
 class _QuizAppState extends State<QuizApp> {
+  //DateTime endTime = DateTime.now().add(Duration(minutes: 1)); // khai báo thời gian đếm ngược cho bài ktra
+  //DateTime endTime = DateTime.now().add(Duration(seconds: 5));
   int currentQuestionIndex = 0;
   int score = 0;
   bool showResult = false;
@@ -277,6 +280,20 @@ class _QuizAppState extends State<QuizApp> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                /*
+                TimerBuilder.periodic(Duration(seconds: 1), builder: (context) {
+                  // Tính toán thời gian còn lại
+                  int timeRemaining =
+                      endTime.difference(DateTime.now()).inSeconds;
+                  int minutes = timeRemaining ~/ 60; // Số phút
+                  int seconds = timeRemaining % 60; // Số giây
+
+                  // Hiển thị thời gian còn lại
+                  return Text(
+                    'Thời gian còn lại: $minutes phút $seconds giây \n',
+                    style: TextStyle(fontSize: 20.0, color: Colors.red),
+                  );
+                }),*/
                 Text(
                   questions[currentQuestionIndex]['question'],
                   style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
