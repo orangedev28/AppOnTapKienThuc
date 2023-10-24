@@ -14,6 +14,7 @@ class PDFList extends StatefulWidget {
 
 class _PDFList extends State<PDFList> {
   List<Map<String, String>> documents = [];
+  String searchKeyword = ""; // Từ khóa tìm kiếm
 
   @override
   void initState() {
@@ -52,8 +53,21 @@ class _PDFList extends State<PDFList> {
     }
   }
 
+  List<Map<String, String>> getFilteredDocuments() {
+    if (searchKeyword.isEmpty) {
+      return documents;
+    } else {
+      return documents.where((document) {
+        final name = document['namedocument'] ?? '';
+        return name.toLowerCase().contains(searchKeyword.toLowerCase());
+      }).toList();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filteredDocuments = getFilteredDocuments();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -61,27 +75,49 @@ class _PDFList extends State<PDFList> {
           style: TextStyle(fontSize: 22),
         ),
       ),
-      body: ListView(
-        children: documents.map((document) {
-          return ListTile(
-            title: Text(
-              document['namedocument'] ?? 'Tên tài liệu',
-              style: TextStyle(
-                fontSize: 20.0,
-                color: Colors.green,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  searchKeyword = value;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: 'Tìm kiếm theo tên tài liệu',
               ),
             ),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ViewPDF(
-                      documentLink: document['linkdocument'],
-                      documentName: document['namedocument']),
-                ),
-              );
-            },
-          );
-        }).toList(),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredDocuments.length,
+              itemBuilder: (context, index) {
+                final document = filteredDocuments[index];
+                return ListTile(
+                  title: Text(
+                    document['namedocument'] ?? 'Tên tài liệu',
+                    style: TextStyle(
+                      fontSize: 20.0,
+                      color: Colors.green,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ViewPDF(
+                          documentLink: document['linkdocument'],
+                          documentName: document['namedocument'],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

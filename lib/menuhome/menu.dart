@@ -1,5 +1,5 @@
 import 'package:app_ontapkienthuc/document/viewpdf.dart';
-import 'package:app_ontapkienthuc/quiz/quiz.dart';
+import 'package:app_ontapkienthuc/subject/subject_list.dart';
 import 'package:flutter/material.dart';
 
 Color mySkyBlueColor = Color.fromRGBO(135, 206, 235, 1);
@@ -40,7 +40,7 @@ class MenuHome extends StatelessWidget {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => QuizListApp(),
+                              builder: (context) => SubjectList(),
                             ),
                           );
                         },
