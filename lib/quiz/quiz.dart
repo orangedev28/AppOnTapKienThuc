@@ -1,7 +1,43 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 //import 'package:timer_builder/timer_builder.dart'; // thư viện đếm ngược
 
-class QuizListApp extends StatelessWidget {
+class QuizListApp extends StatefulWidget {
+  @override
+  _QuizListAppState createState() => _QuizListAppState();
+}
+
+class _QuizListAppState extends State<QuizListApp> {
+  List quizzes = [];
+  @override
+  void initState() {
+    super.initState();
+    fetchQuizzes();
+  }
+
+  Future<void> fetchQuizzes() async {
+    final uri = Uri.parse("http://10.0.149.216:8080/localconnect/quizzes.php");
+    http.Response response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      try {
+        final List<dynamic> data = json.decode(response.body);
+        if (data is List) {
+          setState(() {
+            quizzes = data;
+          });
+        } else {
+          print("Invalid data format from API");
+        }
+      } catch (e) {
+        print("Error parsing JSON: $e");
+      }
+    } else {
+      print("HTTP error: ${response.statusCode}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -11,225 +47,100 @@ class QuizListApp extends StatelessWidget {
           style: TextStyle(fontSize: 22),
         ),
       ),
-      body: ListView(
-        children: [
-          // List of _createQuizRoute()
-          // Example:
-          ListTile(
+      body: ListView.builder(
+        itemCount: quizzes.length,
+        itemBuilder: (context, index) {
+          return ListTile(
             title: Text(
-              'Bài Test 1',
+              quizzes[index]['namequiz'],
               style: TextStyle(
-                fontSize: 20.0, // Set the desired font size
-                color: Colors.green, // Set the desired color
+                fontSize: 20.0,
+                color: Colors.green,
               ),
             ),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => QuizApp(),
+                  builder: (context) => QuizApp(
+                    quizId: quizzes[index]['id'],
+                    nameQuiz: quizzes[index]
+                        ['namequiz'], // Truyền 'namequiz' vào QuizApp
+                  ),
                 ),
               );
             },
-          ),
-          ListTile(
-            title: Text(
-              'Bài Test 2',
-              style: TextStyle(
-                fontSize: 20.0, // Set the desired font size
-                color: Colors.green, // Set the desired color
-              ),
-            ),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => QuizApp(),
-                ),
-              );
-            },
-          ),
-          // Add more ListTiles for each quiz
-        ],
+          );
+        },
       ),
     );
   }
 }
 
 class QuizApp extends StatefulWidget {
+  final String quizId; // Đổi từ int thành String
+  final String nameQuiz; // Thêm thuộc tính nameQuiz
+
+  QuizApp({required this.quizId, required this.nameQuiz});
+
   @override
   _QuizAppState createState() => _QuizAppState();
 }
 
 class _QuizAppState extends State<QuizApp> {
-  //DateTime endTime = DateTime.now().add(Duration(minutes: 1)); // khai báo thời gian đếm ngược cho bài ktra
-  //DateTime endTime = DateTime.now().add(Duration(seconds: 5));
+  List<Map<String, dynamic>> questions = [];
   int currentQuestionIndex = 0;
   int score = 0;
   bool showResult = false;
 
-  List<Map<String, dynamic>> questions = [
-    {
-      'question': 'Question 1: What is Flutter?',
-      'answers': [
-        'A. Mobile app development framework',
-        'B. Programming language',
-        'C. IDE for app development',
-        'D. Database'
-      ],
-      'correctAnswer': 'A. Mobile app development framework',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 2: Flutter is developed by which company?',
-      'answers': ['A. Google', 'B. Facebook', 'C. Microsoft', 'D. Apple'],
-      'correctAnswer': 'A. Google',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question':
-          'Question 3: Widget là khái niệm quan trọng trong Flutter, nó được sử dụng để làm gì?',
-      'answers': [
-        'A. Xây dựng giao diện người dùng',
-        'B. Quản lý trạng thái ứng dụng',
-        'C. Thực hiện các hiệu ứng tinh tế',
-        'D. Tối ưu hóa hiệu suất ứng dụng'
-      ],
-      'correctAnswer': 'A. Xây dựng giao diện người dùng',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 4: 1 + 1 =?',
-      'answers': ['A. 2', 'B. 4', 'C. 5', 'D. 11'],
-      'correctAnswer': 'A. 2',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 5: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 6: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 7: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 8: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 9: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 10: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 11: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 12: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 13: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 14: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 15: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 16: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 17: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 18: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 19: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    {
-      'question': 'Question 20: Flutter viết bằng ngôn ngữ gì?',
-      'answers': ['A. C++', 'B. Java', 'C. C#', 'D. Dart'],
-      'correctAnswer': 'D. Dart',
-      'selectedAnswer': '',
-      'isCorrect': false,
-    },
-    // Add more questions here
-  ];
+  Color mySkyBlueColor = Color.fromRGBO(135, 206, 235, 1);
 
-  void checkAnswer(String selectedAnswer) {
-    String correctAnswer = questions[currentQuestionIndex]['correctAnswer'];
-    bool isCorrect = selectedAnswer == correctAnswer;
+  @override
+  void initState() {
+    super.initState();
+    fetchQuestions();
+  }
+
+  Future<void> fetchQuestions() async {
+    final uri =
+        Uri.parse("http://10.0.149.216:8080/localconnect/questions.php");
+    http.Response response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      try {
+        final List<dynamic> data = json.decode(response.body);
+        if (data is List) {
+          final List<Map<String, dynamic>> questionsList =
+              data.cast<Map<String, dynamic>>();
+
+          // Lọc danh sách câu hỏi theo quizId
+          final filteredQuestions = questionsList
+              .where((question) =>
+                  question['quiz_id'] == widget.quizId) // Sử dụng widget.quizId
+              .toList();
+
+          setState(() {
+            questions = filteredQuestions;
+          });
+        } else {
+          print("Invalid data format from API");
+        }
+      } catch (e) {
+        print("Error parsing JSON: $e");
+      }
+    } else {
+      print("HTTP error: ${response.statusCode}");
+    }
+  }
+
+  void checkAnswer(String selectedanswer) {
+    String correctAnswer = questions[currentQuestionIndex]['correctanswer'];
+    bool iscorrect = selectedanswer == correctAnswer;
 
     setState(() {
-      questions[currentQuestionIndex]['selectedAnswer'] = selectedAnswer;
-      questions[currentQuestionIndex]['isCorrect'] = isCorrect;
+      questions[currentQuestionIndex]['selectedanswer'] = selectedanswer;
+      questions[currentQuestionIndex]['iscorrect'] = iscorrect;
 
-      if (isCorrect) {
+      if (iscorrect) {
         score++;
       }
     });
@@ -254,8 +165,8 @@ class _QuizAppState extends State<QuizApp> {
       showResult = false;
 
       for (var question in questions) {
-        question['selectedAnswer'] = '';
-        question['isCorrect'] = false;
+        question['selectedanswer'] = '';
+        question['iscorrect'] = false;
       }
     });
   }
@@ -266,122 +177,156 @@ class _QuizAppState extends State<QuizApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Bài Test 1',
+    return Scaffold(
+      appBar: AppBar(
+        title: GestureDetector(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Tên Bài kiểm tra'),
+                  content: Text(widget.nameQuiz),
+                );
+              },
+            );
+          },
+          child: Text(
+            widget.nameQuiz,
             style: TextStyle(fontSize: 22),
           ),
         ),
-        body: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                /*
-                TimerBuilder.periodic(Duration(seconds: 1), builder: (context) {
-                  // Tính toán thời gian còn lại
-                  int timeRemaining =
-                      endTime.difference(DateTime.now()).inSeconds;
-                  int minutes = timeRemaining ~/ 60; // Số phút
-                  int seconds = timeRemaining % 60; // Số giây
-
-                  // Hiển thị thời gian còn lại
-                  return Text(
-                    'Thời gian còn lại: $minutes phút $seconds giây \n',
-                    style: TextStyle(fontSize: 20.0, color: Colors.red),
-                  );
-                }),*/
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (questions.isNotEmpty &&
+                  currentQuestionIndex < questions.length)
                 Text(
-                  questions[currentQuestionIndex]['question'],
+                  'Câu ${currentQuestionIndex + 1}: ${questions[currentQuestionIndex]['question']}',
+                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                ),
+              SizedBox(height: 16.0),
+              if (questions.isNotEmpty &&
+                  currentQuestionIndex < questions.length)
+                Column(
+                  children: [
+                    // Inside your Widget's build method
+                    if (questions.isNotEmpty &&
+                        currentQuestionIndex < questions.length)
+                      buildAnswerButton(
+                          questions[currentQuestionIndex]['answer1']),
+                    SizedBox(
+                        height: 5.0), // Thêm khoảng cách 0.5cm giữa các nút
+                    if (questions.isNotEmpty &&
+                        currentQuestionIndex < questions.length)
+                      buildAnswerButton(
+                          questions[currentQuestionIndex]['answer2']),
+                    SizedBox(height: 5.0),
+                    if (questions.isNotEmpty &&
+                        currentQuestionIndex < questions.length)
+                      buildAnswerButton(
+                          questions[currentQuestionIndex]['answer3']),
+                    SizedBox(height: 5.0),
+                    if (questions.isNotEmpty &&
+                        currentQuestionIndex < questions.length)
+                      buildAnswerButton(
+                          questions[currentQuestionIndex]['answer4']),
+                  ],
+                ),
+              SizedBox(height: 16.0),
+              if (showResult)
+                Text(
+                  'Điểm của bạn: ${calculateAverageScore().toStringAsFixed(1)}/10',
                   style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 16.0),
-                ...questions[currentQuestionIndex]['answers'].map((answer) {
-                  bool isSelected = answer ==
-                      questions[currentQuestionIndex]['selectedAnswer'];
+              SizedBox(height: 16.0),
+              if (showResult)
+                ElevatedButton(
+                  child: Text('Làm lại'),
+                  onPressed: resetQuiz,
+                ),
+              if (showResult) SizedBox(height: 16.0),
+              if (showResult)
+                Text(
+                  'Đáp án:',
+                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                ),
+              if (showResult) SizedBox(height: 8.0),
+              if (showResult)
+                SingleChildScrollView(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: questions.length,
+                    itemBuilder: (context, index) {
+                      String selectedanswer =
+                          questions[index]['selectedanswer'];
+                      String correctAnswer = questions[index]['correctanswer'];
 
-                  return ElevatedButton(
-                    child: Text(answer),
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color?>(
-                        isSelected
-                            ? (isSelected &&
-                                    questions[currentQuestionIndex]['isCorrect']
-                                ? Colors.green
-                                : Colors.red)
-                            : null,
-                      ),
-                    ),
-                    onPressed: () {
-                      if (!showResult) {
-                        checkAnswer(answer);
+                      String answerText;
+                      Color answerColor;
+
+                      if (correctAnswer != selectedanswer) {
+                        answerText =
+                            'Câu trả lời sai: $selectedanswer\nĐáp án đúng: $correctAnswer';
+                        answerColor = Colors.red;
+                      } else {
+                        answerText = 'Đúng: $correctAnswer';
+                        answerColor = Colors.green;
                       }
+
+                      return ListTile(
+                        title: Text(
+                          'Câu ${index + 1}: ${questions[index]['question']}',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16.0),
+                        ),
+                        subtitle: Text(
+                          answerText,
+                          style: TextStyle(color: answerColor, fontSize: 16.0),
+                        ),
+                      );
                     },
-                  );
-                }).toList(),
-                SizedBox(height: 16.0),
-                if (showResult)
-                  Text(
-                    'Điểm của bạn: ${calculateAverageScore().toStringAsFixed(1)}/10',
-                    style:
-                        TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
                   ),
-                SizedBox(height: 16.0),
-                if (showResult)
-                  ElevatedButton(
-                    child: Text('Làm lại'),
-                    onPressed: resetQuiz,
-                  ),
-                if (showResult) SizedBox(height: 16.0),
-                if (showResult)
-                  Text(
-                    'Đáp án:',
-                    style:
-                        TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-                  ),
-                if (showResult) SizedBox(height: 8.0),
-                if (showResult)
-                  SingleChildScrollView(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: questions.length,
-                      itemBuilder: (context, index) {
-                        String selectedAnswer =
-                            questions[index]['selectedAnswer'];
-                        String correctAnswer =
-                            questions[index]['correctAnswer'];
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-                        String answerText;
-                        Color answerColor;
+  ElevatedButton buildAnswerButton(String answerText) {
+    bool isSelected =
+        answerText == questions[currentQuestionIndex]['selectedanswer'];
 
-                        if (correctAnswer != selectedAnswer) {
-                          answerText =
-                              'Câu trả lời sai: $selectedAnswer\nĐáp án đúng: $correctAnswer';
-                          answerColor = Colors.red;
-                        } else {
-                          answerText = 'Đúng: $correctAnswer';
-                          answerColor = Colors.green;
-                        }
-
-                        return ListTile(
-                          title: Text(
-                            questions[index]['question'],
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            answerText,
-                            style: TextStyle(color: answerColor),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all<Color?>(
+          isSelected
+              ? (isSelected && questions[currentQuestionIndex]['iscorrect']
+                  ? Colors.green
+                  : Colors.red)
+              : mySkyBlueColor,
+        ),
+      ),
+      onPressed: () {
+        if (!showResult) {
+          checkAnswer(answerText);
+        }
+      },
+      child: Container(
+        height: 60,
+        alignment: Alignment.center,
+        child: Text(
+          answerText,
+          style: TextStyle(
+            fontSize: 18, // Cỡ chữ 18
+            fontWeight: FontWeight.bold, // Chữ đậm
           ),
         ),
       ),
