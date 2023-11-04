@@ -1,9 +1,10 @@
-import "package:app_ontapkienthuc/account/register_account.dart";
 import 'package:flutter/material.dart';
-import 'package:app_ontapkienthuc/home.dart';
-import "package:http/http.dart" as http;
-import "package:fluttertoast/fluttertoast.dart";
-import "dart:convert";
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
+import 'package:app_ontapkienthuc/login/register_account.dart';
+import 'package:app_ontapkienthuc/main.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({Key? key}) : super(key: key);
@@ -16,8 +17,8 @@ class _LoginFormState extends State<LoginForm> {
   TextEditingController username = TextEditingController();
   TextEditingController password = TextEditingController();
 
-  Future login(BuildContext cont) async {
-    if (username.text == "" || password.text == "") {
+  Future<void> login(BuildContext cont) async {
+    if (username.text.isEmpty || password.text.isEmpty) {
       Fluttertoast.showToast(
         msg: "Cả hai trường không được để trống!",
         toastLength: Toast.LENGTH_SHORT,
@@ -32,15 +33,29 @@ class _LoginFormState extends State<LoginForm> {
         "password": password.text,
       });
 
-      var data = json.decode(response.body);
-      if (data == "success") {
-        Navigator.push(
-          cont,
-          MaterialPageRoute(builder: (BuildContext context) => MyHomePage()),
-        );
+      if (response.statusCode == 200) {
+        Map<String, dynamic> data = json.decode(response.body);
+        if (data["status"] == "success") {
+          String userIdString = data["id"];
+          int userId = int.tryParse(userIdString) ?? 0;
+          Provider.of<AuthProvider>(cont, listen: false).setLoggedIn(userId);
+          Fluttertoast.showToast(
+            msg: "Đăng nhập thành công!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            fontSize: 16.0,
+          );
+        } else {
+          Fluttertoast.showToast(
+            msg: "Tài khoản hoặc mật khẩu không chính xác!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            fontSize: 16.0,
+          );
+        }
       } else {
         Fluttertoast.showToast(
-          msg: "Tài khoản hoặc mật khẩu không chính xác!",
+          msg: "Lỗi kết nối đến server!",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           fontSize: 16.0,

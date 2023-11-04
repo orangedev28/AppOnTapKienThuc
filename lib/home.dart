@@ -1,6 +1,6 @@
 import 'package:app_ontapkienthuc/aboutme/about_me.dart';
-import 'package:app_ontapkienthuc/account/my_account.dart';
 import 'package:app_ontapkienthuc/menuhome/menu.dart';
+import 'package:app_ontapkienthuc/user/info.dart';
 import 'package:flutter/material.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -13,40 +13,68 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePage extends State<MyHomePage> {
   int selectedIndex = 0;
   Widget _home = MenuHome();
-  Widget _myAccount = MyAccount();
-  Widget _aboutMe = AboutMe();
+  Widget _myInfo = UserInfoWidget();
+  Widget _aboutUs = AboutUs();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 60,
-        title: const Text(
-          "App Ôn Tập Kiến Thức",
-          style: TextStyle(fontSize: 24),
+    return WillPopScope(
+      onWillPop: () async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Thoát ứng dụng'),
+              content: Text('Có chắc bạn muốn thoát ứng dụng không?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true); // Kết thúc ứng dụng
+                  },
+                  child: Text('Có'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false); // Tiếp tục ứng dụng
+                  },
+                  child: Text('Không'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          toolbarHeight: 60,
+          title: const Text(
+            "App Ôn Tập Kiến Thức",
+            style: TextStyle(fontSize: 24),
+          ),
         ),
-      ),
-      body: getBody(),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: this.selectedIndex,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.contacts),
-            label: "Trang Chủ",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Đăng Nhập",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.info),
-            label: "Thông Tin",
-          ),
-        ],
-        onTap: (int index) {
-          this.onTapHandler(index);
-        },
+        body: getBody(),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: this.selectedIndex,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.contacts),
+              label: "Trang Chủ",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: "Tài Khoản",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.info),
+              label: "Thông Tin",
+            ),
+          ],
+          onTap: (int index) {
+            this.onTapHandler(index);
+          },
+        ),
       ),
     );
   }
@@ -55,9 +83,9 @@ class _MyHomePage extends State<MyHomePage> {
     if (this.selectedIndex == 0) {
       return this._home;
     } else if (this.selectedIndex == 1) {
-      return this._myAccount;
+      return this._myInfo;
     } else {
-      return this._aboutMe;
+      return this._aboutUs;
     }
   }
 

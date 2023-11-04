@@ -9,7 +9,7 @@ class SubjectList extends StatefulWidget {
 }
 
 class _SubjectListState extends State<SubjectList> {
-  List<String> subjects = [];
+  List<Map<String, dynamic>> subjects = [];
 
   @override
   void initState() {
@@ -24,8 +24,9 @@ class _SubjectListState extends State<SubjectList> {
     if (response.statusCode == 200) {
       try {
         final List<dynamic> subjectData = json.decode(response.body);
+
         setState(() {
-          subjects = subjectData.cast<String>();
+          subjects = List<Map<String, dynamic>>.from(subjectData);
         });
       } catch (e) {
         print("Error parsing JSON: $e");
@@ -55,23 +56,20 @@ class _SubjectListState extends State<SubjectList> {
         itemBuilder: (context, index) {
           return ElevatedButton(
             child: Text(
-              subjects[index],
+              subjects[index]['namesubject'],
               style: TextStyle(fontSize: 20),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: mySkyBlueColor,
             ),
             onPressed: () {
-              // Navigate to the appropriate screen here.
-              if (subjects[index] == "Lập trình C") {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => QuizListApp(),
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => QuizListApp(
+                    subjectId: subjects[index]['id'],
                   ),
-                );
-              } else {
-                // Handle navigation for other subjects like "Mạng máy tính", etc.
-              }
+                ),
+              );
             },
           );
         },

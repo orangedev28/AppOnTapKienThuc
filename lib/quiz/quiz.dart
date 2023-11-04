@@ -4,12 +4,16 @@ import 'package:http/http.dart' as http;
 //import 'package:timer_builder/timer_builder.dart'; // thư viện đếm ngược
 
 class QuizListApp extends StatefulWidget {
+  final String subjectId;
+
+  QuizListApp({required this.subjectId});
+
   @override
   _QuizListAppState createState() => _QuizListAppState();
 }
 
 class _QuizListAppState extends State<QuizListApp> {
-  List quizzes = [];
+  List<Map<String, dynamic>> quizzes = [];
   @override
   void initState() {
     super.initState();
@@ -24,8 +28,15 @@ class _QuizListAppState extends State<QuizListApp> {
       try {
         final List<dynamic> data = json.decode(response.body);
         if (data is List) {
+          final List<Map<String, dynamic>> quizList =
+              data.cast<Map<String, dynamic>>();
+
+          final filteredQuizzes = quizList
+              .where((quizzes) => quizzes['subject_id'] == widget.subjectId)
+              .toList();
+
           setState(() {
-            quizzes = data;
+            quizzes = filteredQuizzes;
           });
         } else {
           print("Invalid data format from API");
@@ -251,6 +262,14 @@ class _QuizAppState extends State<QuizApp> {
                 ),
               if (showResult) SizedBox(height: 16.0),
               if (showResult)
+                ElevatedButton(
+                  child: Text('Lưu bài'),
+                  onPressed: () {
+                    saveScore(widget.quizId, calculateAverageScore());
+                  },
+                ),
+              if (showResult) SizedBox(height: 16.0),
+              if (showResult)
                 Text(
                   'Đáp án:',
                   style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
@@ -331,5 +350,35 @@ class _QuizAppState extends State<QuizApp> {
         ),
       ),
     );
+  }
+
+  Future<void> saveScore(String quizId, double score) async {
+    var url = Uri.parse('http://10.0.149.216:8080/localconnect/savescore.php');
+
+    // Lấy thời gian hiện tại
+    var now = DateTime.now();
+    var formattedDate = "${now.year}-${now.month}-${now.day}";
+
+    // Tạo body request dưới dạng JSON
+    var body = json.encode({
+      'score': score,
+      'dateadd': formattedDate,
+      'quiz_id': quizId,
+      // Thêm user_id nếu có thông tin người dùng đăng nhập
+      'user_id': 1, // Thay thế bằng ID người dùng thực tế nếu có
+    });
+
+    // Gửi yêu cầu POST để lưu điểm vào cơ sở dữ liệu
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      print('Điểm đã được lưu vào cơ sở dữ liệu!');
+    } else {
+      print('Lỗi: ${response.statusCode}');
+    }
   }
 }

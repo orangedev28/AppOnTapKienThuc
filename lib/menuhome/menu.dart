@@ -9,6 +9,8 @@ class MenuHome extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading:
+            false, // Thêm dòng này để ẩn dấu điều hướng trở về
         title: Text(
           "Trang Chủ",
           style: TextStyle(fontSize: 22),

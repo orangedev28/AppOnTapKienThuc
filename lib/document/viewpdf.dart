@@ -104,14 +104,19 @@ class _PDFList extends State<PDFList> {
                     ),
                   ),
                   onTap: () {
-                    Navigator.of(context).push(
+                    Navigator.push(
+                      context,
                       MaterialPageRoute(
                         builder: (context) => ViewPDF(
                           documentLink: document['linkdocument'],
                           documentName: document['namedocument'],
                         ),
                       ),
-                    );
+                    ).then((value) {
+                      setState(() {
+                        // Refresh the list if needed
+                      });
+                    });
                   },
                 );
               },
@@ -144,6 +149,7 @@ class _ViewPDF extends State<ViewPDF> {
         setState(() {
           pathPDF = f.path;
           if (pathPDF.isNotEmpty) {
+            Navigator.pop(context);
             Navigator.push(
               context,
               MaterialPageRoute(

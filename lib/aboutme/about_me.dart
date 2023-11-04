@@ -1,56 +1,73 @@
+import 'package:app_ontapkienthuc/ui/background/background.dart';
 import 'package:flutter/material.dart';
 
-class AboutMe extends StatelessWidget {
+class AboutUs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           "About Us",
           style: TextStyle(fontSize: 22),
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
+      body: Stack(
+        children: [
+          Background(),
+          Positioned(
+            top: 130,
+            left: 60,
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.place),
-                SizedBox(width: 5, height: 5),
-                Text("Hutech ThuDuc Campus"),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.phone),
-                SizedBox(width: 5, height: 5),
-                Text("Biện Huỳnh Công Khang - 2011060425 - 0342886207"),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.phone),
-                SizedBox(width: 5, height: 5),
-                Text("Lê Hoài Lộc - 2011063439 - 0333413698"),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  width: 360.0,
-                  height: 220.0,
-                  'assets/images/lake.png', // Thay đổi đường dẫn ảnh tại đây
-                  fit: BoxFit.cover,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.place),
+                    SizedBox(width: 5, height: 5),
+                    Text(
+                      "Hutech ThuDuc Campus",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person),
+                    SizedBox(width: 5, height: 5),
+                    Text(
+                      "Biện Huỳnh Công Khang - 2011060425",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person),
+                    SizedBox(width: 5, height: 5),
+                    Text(
+                      "Lê Hoài Lộc - 2011063439",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            top: 253,
+            left: 0,
+            child: Image.asset(
+              'assets/images/hutechback.jpg',
+              width: 412.0,
+              height: 220.0,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ],
       ),
     );
   }
