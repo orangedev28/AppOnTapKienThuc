@@ -87,8 +87,8 @@ class _RegisterForm extends State<RegisterForm> {
         if (password.text == repeatpassword.text) {
           bool isValidPassword = await validatePassword(password.text);
           if (isValidPassword) {
-            final registerUri =
-                Uri.parse("http://10.0.149.216:8080/localconnect/register.php");
+            final registerUri = Uri.parse(
+                "http://172.20.149.208:8080/localconnect/register.php");
             http.Response registerResponse =
                 await http.post(registerUri, body: {
               "username": username.text,

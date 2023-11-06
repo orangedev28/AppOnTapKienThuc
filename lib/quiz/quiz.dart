@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:app_ontapkienthuc/main.dart';
+import 'package:provider/provider.dart';
 //import 'package:timer_builder/timer_builder.dart'; // thư viện đếm ngược
 
 class QuizListApp extends StatefulWidget {
@@ -21,7 +23,8 @@ class _QuizListAppState extends State<QuizListApp> {
   }
 
   Future<void> fetchQuizzes() async {
-    final uri = Uri.parse("http://10.0.149.216:8080/localconnect/quizzes.php");
+    final uri =
+        Uri.parse("http://172.20.149.208:8080/localconnect/quizzes.php");
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -113,7 +116,7 @@ class _QuizAppState extends State<QuizApp> {
 
   Future<void> fetchQuestions() async {
     final uri =
-        Uri.parse("http://10.0.149.216:8080/localconnect/questions.php");
+        Uri.parse("http://172.20.149.208:8080/localconnect/questions.php");
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -353,32 +356,34 @@ class _QuizAppState extends State<QuizApp> {
   }
 
   Future<void> saveScore(String quizId, double score) async {
-    var url = Uri.parse('http://10.0.149.216:8080/localconnect/savescore.php');
+    var url =
+        Uri.parse('http://172.20.149.208:8080/localconnect/savescore.php');
 
-    // Lấy thời gian hiện tại
     var now = DateTime.now();
     var formattedDate = "${now.year}-${now.month}-${now.day}";
 
-    // Tạo body request dưới dạng JSON
-    var body = json.encode({
-      'score': score,
-      'dateadd': formattedDate,
-      'quiz_id': quizId,
-      // Thêm user_id nếu có thông tin người dùng đăng nhập
-      'user_id': 1, // Thay thế bằng ID người dùng thực tế nếu có
-    });
+    int loggedInUserId =
+        Provider.of<AuthProvider>(context, listen: false).userId;
 
-    // Gửi yêu cầu POST để lưu điểm vào cơ sở dữ liệu
-    var response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: body,
-    );
+    if (loggedInUserId != 0) {
+      var body = json.encode({
+        'score': score,
+        'dateadd': formattedDate,
+        'quiz_id': quizId,
+        'user_id': loggedInUserId,
+      });
 
-    if (response.statusCode == 200) {
-      print('Điểm đã được lưu vào cơ sở dữ liệu!');
-    } else {
-      print('Lỗi: ${response.statusCode}');
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        print('Điểm đã được lưu vào cơ sở dữ liệu!');
+      } else {
+        print('Lỗi: ${response.statusCode}');
+      }
     }
   }
 }

@@ -28,7 +28,7 @@ class _PDFList extends State<PDFList> {
 
   Future<List<Map<String, String>>?> fetchDocuments() async {
     final uri =
-        Uri.parse("http://10.0.149.216:8080/localconnect/documents.php");
+        Uri.parse("http://172.20.149.208:8080/localconnect/documents.php");
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {

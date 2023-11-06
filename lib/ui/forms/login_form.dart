@@ -27,7 +27,7 @@ class _LoginFormState extends State<LoginForm> {
       );
     } else {
       final uri =
-          Uri.parse("http://10.0.149.216:8080/localconnect/loginApp.php");
+          Uri.parse("http://172.20.149.208:8080/localconnect/loginApp.php");
       http.Response response = await http.post(uri, body: {
         "username": username.text,
         "password": password.text,

@@ -18,7 +18,8 @@ class _SubjectListState extends State<SubjectList> {
   }
 
   Future<void> fetchData() async {
-    final uri = Uri.parse("http://10.0.149.216:8080/localconnect/subjects.php");
+    final uri =
+        Uri.parse("http://172.20.149.208:8080/localconnect/subjects.php");
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {

@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:app_ontapkienthuc/main.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class UserInfoWidget extends StatefulWidget {
   @override
@@ -15,6 +17,7 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
   String username = '';
   String fullName = '';
   String email = '';
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -24,8 +27,8 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
   }
 
   Future<void> fetchUserInfo(int userId) async {
-    final response = await http.get(
-        Uri.parse("http://10.0.149.216:8080/localconnect/user.php?id=$userId"));
+    final response = await http.get(Uri.parse(
+        "http://172.20.149.208:8080/localconnect/user.php?id=$userId"));
 
     if (response.statusCode == 200) {
       dynamic responseData = json.decode(response.body);
@@ -48,6 +51,32 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
   }
 
   void logout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Xác nhận đăng xuất'),
+          content: Text('Có chắc bạn muốn đăng xuất khỏi tài khoản không?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Có'),
+              onPressed: () {
+                performLogout(context);
+              },
+            ),
+            TextButton(
+              child: Text('Không'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Đóng hộp thoại cảnh báo
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void performLogout(BuildContext context) {
     Provider.of<AuthProvider>(context, listen: false).setLoggedIn(0);
     Navigator.pushAndRemoveUntil(
       context,
@@ -56,6 +85,48 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
       ),
       (route) => false,
     );
+  }
+
+  void _pickImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      // Thay đổi UI hiển thị hình ảnh đã chọn
+      setState(() {
+        profileImage = pickedFile.path;
+        print(pickedFile.path);
+      });
+
+      // Lưu đường dẫn ảnh vào cơ sở dữ liệu
+      await updateProfileImageInDatabase(pickedFile.path);
+    }
+  }
+
+  Future<void> updateProfileImageInDatabase(String imagePath) async {
+    var url =
+        Uri.parse('http://172.20.149.208:8080/localconnect/update_image.php');
+
+    int loggedInUserId =
+        Provider.of<AuthProvider>(context, listen: false).userId;
+
+    if (loggedInUserId != 0) {
+      var body = json.encode({
+        'image': imagePath,
+        'id': loggedInUserId,
+      });
+
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        print('Ảnh thay đổi đã được lưu vào cơ sở dữ liệu!');
+      } else {
+        print('Lỗi: ${response.statusCode}');
+      }
+    }
   }
 
   @override
@@ -87,6 +158,12 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
                         ? AssetImage(profileImage)
                         : null,
                   ),
+                ),
+                SizedBox(width: 20),
+                FloatingActionButton(
+                  onPressed: _pickImage,
+                  tooltip: 'Thay đổi ảnh',
+                  child: Icon(Icons.add_a_photo),
                 ),
                 SizedBox(height: 20),
                 Container(
