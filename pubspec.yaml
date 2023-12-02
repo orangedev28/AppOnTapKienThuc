@@ -32,9 +32,16 @@ dependencies:
   flutter:
     sdk: flutter
 
+  intl: ^0.17.0
+
+  video_player: ^2.4.1
+
+  flutter_screenutil: ^5.9.0
+
   path_provider: ^2.0.2
 
   http: ^1.1.0
+
   fluttertoast: any
   
   flutter_pdfview: ^1.2.1
@@ -67,8 +74,9 @@ flutter:
     - assets/images/lake.png
     - assets/images/
     - assets/pdf/
+    - assets/video/testvideo1.mp4
+    - assets/video/
     - assets/
-
 
   uses-material-design: true
 

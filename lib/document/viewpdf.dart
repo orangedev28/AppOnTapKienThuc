@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:app_ontapkienthuc/url/api_url.dart';
 import "package:http/http.dart" as http;
 import "dart:convert";
 import 'package:flutter/material.dart';
@@ -27,8 +28,7 @@ class _PDFList extends State<PDFList> {
   }
 
   Future<List<Map<String, String>>?> fetchDocuments() async {
-    final uri =
-        Uri.parse("http://172.20.149.208:8080/localconnect/documents.php");
+    final uri = Uri.parse(ApiUrls.documentsUrl);
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {

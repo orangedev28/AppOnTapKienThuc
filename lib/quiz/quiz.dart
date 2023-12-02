@@ -1,8 +1,11 @@
+import 'package:app_ontapkienthuc/url/api_url.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:app_ontapkienthuc/main.dart';
 import 'package:provider/provider.dart';
+import "package:fluttertoast/fluttertoast.dart";
+import 'package:intl/intl.dart';
 //import 'package:timer_builder/timer_builder.dart'; // thư viện đếm ngược
 
 class QuizListApp extends StatefulWidget {
@@ -23,8 +26,7 @@ class _QuizListAppState extends State<QuizListApp> {
   }
 
   Future<void> fetchQuizzes() async {
-    final uri =
-        Uri.parse("http://172.20.149.208:8080/localconnect/quizzes.php");
+    final uri = Uri.parse(ApiUrls.quizzesUrl);
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -105,6 +107,7 @@ class _QuizAppState extends State<QuizApp> {
   int currentQuestionIndex = 0;
   int score = 0;
   bool showResult = false;
+  bool quizCompleted = false;
 
   Color mySkyBlueColor = Color.fromRGBO(135, 206, 235, 1);
 
@@ -115,8 +118,7 @@ class _QuizAppState extends State<QuizApp> {
   }
 
   Future<void> fetchQuestions() async {
-    final uri =
-        Uri.parse("http://172.20.149.208:8080/localconnect/questions.php");
+    final uri = Uri.parse(ApiUrls.questionsUrl);
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -147,19 +149,29 @@ class _QuizAppState extends State<QuizApp> {
   }
 
   void checkAnswer(String selectedanswer) {
-    String correctAnswer = questions[currentQuestionIndex]['correctanswer'];
-    bool iscorrect = selectedanswer == correctAnswer;
+    if (!quizCompleted) {
+      String correctAnswer = questions[currentQuestionIndex]['correctanswer'];
+      bool iscorrect = selectedanswer == correctAnswer;
 
-    setState(() {
-      questions[currentQuestionIndex]['selectedanswer'] = selectedanswer;
-      questions[currentQuestionIndex]['iscorrect'] = iscorrect;
+      setState(() {
+        questions[currentQuestionIndex]['selectedanswer'] = selectedanswer;
+        questions[currentQuestionIndex]['iscorrect'] = iscorrect;
 
-      if (iscorrect) {
-        score++;
-      }
-    });
+        if (iscorrect) {
+          score++;
+        }
+      });
 
-    goToNextQuestion();
+      goToNextQuestion();
+    }
+  }
+
+  void checkQuizCompletion() {
+    if (currentQuestionIndex == questions.length) {
+      setState(() {
+        quizCompleted = true;
+      });
+    }
   }
 
   void goToNextQuestion() {
@@ -167,8 +179,10 @@ class _QuizAppState extends State<QuizApp> {
       setState(() {
         currentQuestionIndex++;
       });
+      checkQuizCompletion(); // Thêm dòng này
     } else {
       showResult = true;
+      quizCompleted = true;
     }
   }
 
@@ -177,6 +191,7 @@ class _QuizAppState extends State<QuizApp> {
       currentQuestionIndex = 0;
       score = 0;
       showResult = false;
+      quizCompleted = false; // Thêm dòng này
 
       for (var question in questions) {
         question['selectedanswer'] = '';
@@ -217,6 +232,11 @@ class _QuizAppState extends State<QuizApp> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Text(
+                'Câu ${currentQuestionIndex + 1}/${questions.length}',
+                style: TextStyle(fontSize: 18.0),
+              ),
+              SizedBox(height: 16.0),
               if (questions.isNotEmpty &&
                   currentQuestionIndex < questions.length)
                 Text(
@@ -233,8 +253,7 @@ class _QuizAppState extends State<QuizApp> {
                         currentQuestionIndex < questions.length)
                       buildAnswerButton(
                           questions[currentQuestionIndex]['answer1']),
-                    SizedBox(
-                        height: 5.0), // Thêm khoảng cách 0.5cm giữa các nút
+                    SizedBox(height: 5.0),
                     if (questions.isNotEmpty &&
                         currentQuestionIndex < questions.length)
                       buildAnswerButton(
@@ -266,9 +285,9 @@ class _QuizAppState extends State<QuizApp> {
               if (showResult) SizedBox(height: 16.0),
               if (showResult)
                 ElevatedButton(
-                  child: Text('Lưu bài'),
+                  child: Text('Lưu điểm'),
                   onPressed: () {
-                    saveScore(widget.quizId, calculateAverageScore());
+                    saveScore(widget.quizId, calculateAverageScore(), context);
                   },
                 ),
               if (showResult) SizedBox(height: 16.0),
@@ -315,6 +334,50 @@ class _QuizAppState extends State<QuizApp> {
                     },
                   ),
                 ),
+              SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (currentQuestionIndex > 0)
+                    ElevatedButton(
+                      child: Text('Câu trước'),
+                      onPressed: () {
+                        setState(() {
+                          currentQuestionIndex--;
+                        });
+                      },
+                    ),
+                  if (currentQuestionIndex < questions.length - 1)
+                    ElevatedButton(
+                      child: Text('Câu tiếp theo'),
+                      onPressed: () {
+                        if (questions[currentQuestionIndex]['selectedanswer'] ==
+                            '') {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text('Hãy chọn đáp án!'),
+                                actions: [
+                                  ElevatedButton(
+                                    child: Text('OK'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        } else {
+                          setState(() {
+                            currentQuestionIndex++;
+                          });
+                        }
+                      },
+                    ),
+                ],
+              ),
             ],
           ),
         ),
@@ -325,16 +388,25 @@ class _QuizAppState extends State<QuizApp> {
   ElevatedButton buildAnswerButton(String answerText) {
     bool isSelected =
         answerText == questions[currentQuestionIndex]['selectedanswer'];
+    bool isCorrect = questions[currentQuestionIndex]['iscorrect'] == true;
+
+    Color backgroundColor;
+    if (quizCompleted) {
+      if (isSelected && isCorrect) {
+        backgroundColor =
+            Colors.green; // Hiển thị màu xanh nếu câu trả lời đúng
+      } else if (isSelected && !isCorrect) {
+        backgroundColor = Colors.red; // Hiển thị màu đỏ nếu câu trả lời sai
+      } else {
+        backgroundColor = mySkyBlueColor; // Hiển thị màu nền mặc định
+      }
+    } else {
+      backgroundColor = isSelected ? Colors.grey : mySkyBlueColor;
+    }
 
     return ElevatedButton(
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all<Color?>(
-          isSelected
-              ? (isSelected && questions[currentQuestionIndex]['iscorrect']
-                  ? Colors.green
-                  : Colors.red)
-              : mySkyBlueColor,
-        ),
+        backgroundColor: MaterialStateProperty.all<Color?>(backgroundColor),
       ),
       onPressed: () {
         if (!showResult) {
@@ -347,43 +419,58 @@ class _QuizAppState extends State<QuizApp> {
         child: Text(
           answerText,
           style: TextStyle(
-            fontSize: 18, // Cỡ chữ 18
-            fontWeight: FontWeight.bold, // Chữ đậm
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
     );
   }
 
-  Future<void> saveScore(String quizId, double score) async {
-    var url =
-        Uri.parse('http://172.20.149.208:8080/localconnect/savescore.php');
-
-    var now = DateTime.now();
-    var formattedDate = "${now.year}-${now.month}-${now.day}";
-
+  Future<void> saveScore(
+      String quizId, double score, BuildContext context) async {
     int loggedInUserId =
         Provider.of<AuthProvider>(context, listen: false).userId;
 
     if (loggedInUserId != 0) {
       var body = json.encode({
         'score': score,
-        'dateadd': formattedDate,
         'quiz_id': quizId,
         'user_id': loggedInUserId,
       });
 
-      var response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: body,
-      );
+      var saveScoreUrl = Uri.parse(ApiUrls.checkScoreExistAndSaveUrl);
 
-      if (response.statusCode == 200) {
-        print('Điểm đã được lưu vào cơ sở dữ liệu!');
-      } else {
-        print('Lỗi: ${response.statusCode}');
+      try {
+        var saveScoreResponse = await http.post(
+          saveScoreUrl,
+          headers: {"Content-Type": "application/json"},
+          body: body,
+        );
+
+        if (saveScoreResponse.statusCode == 200) {
+          var saveScoreData = json.decode(saveScoreResponse.body);
+
+          if (saveScoreData['message'] == 'success') {
+            showToast(context, "Điểm đã được lưu vào cơ sở dữ liệu!");
+          } else {
+            showToast(context, "Điểm đã tồn tại cho lần lưu trước!");
+          }
+        } else {
+          print('Error: ${saveScoreResponse.statusCode}');
+        }
+      } catch (error) {
+        print('Error: $error');
       }
     }
+  }
+
+  void showToast(BuildContext context, String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.CENTER,
+      fontSize: 16.0,
+    );
   }
 }

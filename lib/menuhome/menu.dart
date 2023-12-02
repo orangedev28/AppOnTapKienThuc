@@ -1,5 +1,7 @@
+import 'package:app_ontapkienthuc/autoquiz/auto_createquiz.dart';
 import 'package:app_ontapkienthuc/document/viewpdf.dart';
 import 'package:app_ontapkienthuc/subject/subject_list.dart';
+import 'package:app_ontapkienthuc/video/watch_video.dart';
 import 'package:flutter/material.dart';
 
 Color mySkyBlueColor = Color.fromRGBO(135, 206, 235, 1);
@@ -102,7 +104,7 @@ class MenuHome extends StatelessWidget {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => PDFList(),
+                              builder: (context) => VideoList(),
                             ),
                           );
                         },
@@ -153,7 +155,7 @@ class MenuHome extends StatelessWidget {
                       height: 90.0,
                       child: ElevatedButton(
                         child: Text(
-                          "Liên Hệ",
+                          "Tạo đề tự động",
                           style: TextStyle(fontSize: 20),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -162,7 +164,7 @@ class MenuHome extends StatelessWidget {
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => PDFList(),
+                              builder: (context) => TopicSelectionScreen(),
                             ),
                           );
                         },

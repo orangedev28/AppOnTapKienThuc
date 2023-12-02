@@ -1,3 +1,4 @@
+import "package:app_ontapkienthuc/url/api_url.dart";
 import 'package:flutter/material.dart';
 import "package:http/http.dart" as http;
 import "package:fluttertoast/fluttertoast.dart";
@@ -87,8 +88,7 @@ class _RegisterForm extends State<RegisterForm> {
         if (password.text == repeatpassword.text) {
           bool isValidPassword = await validatePassword(password.text);
           if (isValidPassword) {
-            final registerUri = Uri.parse(
-                "http://172.20.149.208:8080/localconnect/register.php");
+            final registerUri = Uri.parse(ApiUrls.registerUrl);
             http.Response registerResponse =
                 await http.post(registerUri, body: {
               "username": username.text,

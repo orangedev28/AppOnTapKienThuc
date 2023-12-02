@@ -1,3 +1,5 @@
+import 'package:app_ontapkienthuc/ui/forms/forgot_password.dart';
+import 'package:app_ontapkienthuc/url/api_url.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -26,8 +28,7 @@ class _LoginFormState extends State<LoginForm> {
         fontSize: 16.0,
       );
     } else {
-      final uri =
-          Uri.parse("http://172.20.149.208:8080/localconnect/loginApp.php");
+      final uri = Uri.parse(ApiUrls.loginUrl);
       http.Response response = await http.post(uri, body: {
         "username": username.text,
         "password": password.text,
@@ -177,14 +178,23 @@ class _LoginFormState extends State<LoginForm> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Container(
-              margin: const EdgeInsets.only(right: 16, top: 16),
-              child: Text(
-                "Quên mật khẩu ?",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[400],
+              margin: const EdgeInsets.only(left: 16, top: 24),
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xffe98f60),
+                  ),
                 ),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ForgotPasswordForm(),
+                    ),
+                  );
+                },
+                child: const Text("Quên mật khẩu?"),
               ),
             ),
           ],
