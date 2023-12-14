@@ -116,6 +116,14 @@ class _RegisterForm extends State<RegisterForm> {
                   fontSize: 16.0,
                 );
                 break;
+              case "exists_email":
+                Fluttertoast.showToast(
+                  msg: "Email đã tồn tại!",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.CENTER,
+                  fontSize: 16.0,
+                );
+                break;
               default:
                 Fluttertoast.showToast(
                   msg: "Đăng ký thất bại!",

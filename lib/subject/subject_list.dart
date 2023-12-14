@@ -1,4 +1,5 @@
 import 'package:app_ontapkienthuc/quiz/quiz.dart';
+import 'package:app_ontapkienthuc/ui/background/background.dart';
 import 'package:app_ontapkienthuc/url/api_url.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -48,33 +49,44 @@ class _SubjectListState extends State<SubjectList> {
           style: TextStyle(fontSize: 22),
         ),
       ),
-      body: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // Số cột
-          crossAxisSpacing: 8.0, // Khoảng cách giữa các ô theo chiều ngang
-          mainAxisSpacing: 8.0, // Khoảng cách giữa các ô theo chiều dọc
-        ),
-        itemBuilder: (context, index) {
-          return ElevatedButton(
-            child: Text(
-              subjects[index]['namesubject'],
-              style: TextStyle(fontSize: 20),
+      body: Stack(
+        children: [
+          // Add your Background widget as the first child
+          Background(),
+          GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, // Số cột
+              crossAxisSpacing: 8.0, // Khoảng cách giữa các ô theo chiều ngang
+              mainAxisSpacing: 8.0, // Khoảng cách giữa các ô theo chiều dọc
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: mySkyBlueColor,
-            ),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => QuizListApp(
-                    subjectId: subjects[index]['id'],
+            itemBuilder: (context, index) {
+              return Padding(
+                padding:
+                    const EdgeInsets.all(8.0), // Add padding around the button
+                child: ElevatedButton(
+                  child: Text(
+                    subjects[index]['namesubject'],
+                    style: TextStyle(fontSize: 18), // Reduce the font size
                   ),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.all(16.0), // Increase the padding
+                    backgroundColor: mySkyBlueColor,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => QuizListApp(
+                          subjectId: subjects[index]['id'],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               );
             },
-          );
-        },
-        itemCount: subjects.length,
+            itemCount: subjects.length,
+          ),
+        ], // Close the list of Stack children here
       ),
     );
   }

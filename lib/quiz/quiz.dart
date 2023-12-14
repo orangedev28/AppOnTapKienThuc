@@ -57,38 +57,40 @@ class _QuizListAppState extends State<QuizListApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Danh sách bài kiểm tra',
-          style: TextStyle(fontSize: 22),
+        appBar: AppBar(
+          title: Text(
+            'Danh sách bài kiểm tra',
+            style: TextStyle(fontSize: 22),
+          ),
         ),
-      ),
-      body: ListView.builder(
-        itemCount: quizzes.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(
-              quizzes[index]['namequiz'],
-              style: TextStyle(
-                fontSize: 20.0,
-                color: Colors.green,
-              ),
-            ),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => QuizApp(
-                    quizId: quizzes[index]['id'],
-                    nameQuiz: quizzes[index]
-                        ['namequiz'], // Truyền 'namequiz' vào QuizApp
+        body: ListView.builder(
+          itemCount: quizzes.length,
+          itemBuilder: (context, index) {
+            return Card(
+              elevation: 2, // Add some elevation for a shadow effect
+              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              child: ListTile(
+                title: Text(
+                  quizzes[index]['namequiz'],
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    color: Colors.green,
                   ),
                 ),
-              );
-            },
-          );
-        },
-      ),
-    );
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => QuizApp(
+                        quizId: quizzes[index]['id'],
+                        nameQuiz: quizzes[index]['namequiz'],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ));
   }
 }
 

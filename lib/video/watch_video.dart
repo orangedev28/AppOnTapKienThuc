@@ -6,8 +6,100 @@ import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
+import 'package:app_ontapkienthuc/ui/background/background.dart';
+
+class SubjectListForVideos extends StatefulWidget {
+  @override
+  _SubjectListState createState() => _SubjectListState();
+}
+
+class _SubjectListState extends State<SubjectListForVideos> {
+  List<Map<String, dynamic>> subjects = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    final uri = Uri.parse(ApiUrls.subjectsUrl);
+    http.Response response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      try {
+        final List<dynamic> subjectData = json.decode(response.body);
+
+        setState(() {
+          subjects = List<Map<String, dynamic>>.from(subjectData);
+        });
+      } catch (e) {
+        print("Error parsing JSON: $e");
+      }
+    } else {
+      print("HTTP error: ${response.statusCode}");
+    }
+  }
+
+  Color mySkyBlueColor = Color.fromRGBO(135, 206, 235, 1);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Danh sách môn học",
+          style: TextStyle(fontSize: 22),
+        ),
+      ),
+      body: Stack(
+        children: [
+          // Add your Background widget as the first child
+          Background(),
+          GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, // Số cột
+              crossAxisSpacing: 8.0, // Khoảng cách giữa các ô theo chiều ngang
+              mainAxisSpacing: 8.0, // Khoảng cách giữa các ô theo chiều dọc
+            ),
+            itemBuilder: (context, index) {
+              return Padding(
+                padding:
+                    const EdgeInsets.all(8.0), // Add padding around the button
+                child: ElevatedButton(
+                  child: Text(
+                    subjects[index]['namesubject'],
+                    style: TextStyle(fontSize: 18), // Reduce the font size
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.all(16.0), // Increase the padding
+                    backgroundColor: mySkyBlueColor,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => VideoList(
+                          subjectId: subjects[index]['id'],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+            itemCount: subjects.length,
+          ),
+        ], // Close the list of Stack children here
+      ),
+    );
+  }
+}
 
 class VideoList extends StatefulWidget {
+  final String subjectId;
+
+  VideoList({required this.subjectId});
+
   @override
   _VideoListState createState() => _VideoListState();
 }
@@ -39,7 +131,9 @@ class _VideoListState extends State<VideoList> {
               .map<Map<String, String>>((item) => {
                     'namevideo': item['namevideo'].toString(),
                     'linkvideo': item['linkvideo'].toString(),
+                    'subject_id': item['subject_id'].toString()
                   })
+              .where((video) => video['subject_id'] == widget.subjectId)
               .toList();
         } else {
           throw Exception('Response is not a list');
@@ -94,29 +188,33 @@ class _VideoListState extends State<VideoList> {
               itemCount: filteredVideos.length,
               itemBuilder: (context, index) {
                 final video = filteredVideos[index];
-                return ListTile(
-                  title: Text(
-                    video['namevideo'] ?? 'Tên video',
-                    style: TextStyle(
-                      fontSize: 20.0,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PlayVideo(
-                          videoLink: video['linkvideo'],
-                          videoName: video['namevideo'],
-                        ),
+                return Card(
+                  elevation: 2, // Add some elevation for a shadow effect
+                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: ListTile(
+                    title: Text(
+                      video['namevideo'] ?? 'Tên video',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        color: Colors.blue,
                       ),
-                    ).then((value) {
-                      setState(() {
-                        // Refresh the list if needed
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PlayVideo(
+                            videoLink: video['linkvideo'],
+                            videoName: video['namevideo'],
+                          ),
+                        ),
+                      ).then((value) {
+                        setState(() {
+                          // Refresh the list if needed
+                        });
                       });
-                    });
-                  },
+                    },
+                  ),
                 );
               },
             ),
@@ -142,6 +240,7 @@ class _PlayVideoState extends State<PlayVideo> {
   late Future<void> _initializeVideoPlayerFuture;
   bool _showControls = true;
   bool _isFullScreen = false;
+  GlobalKey _videoPlayerKey = GlobalKey();
 
   @override
   void initState() {
@@ -169,11 +268,24 @@ class _PlayVideoState extends State<PlayVideo> {
       _isFullScreen = !_isFullScreen;
     });
 
+    if (_isFullScreen) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
+          overlays: [SystemUiOverlay.bottom, SystemUiOverlay.top]);
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
+
     SystemChrome.setPreferredOrientations([
       _isFullScreen
           ? DeviceOrientation.landscapeLeft
           : DeviceOrientation.portraitUp,
     ]);
+
+    Future.delayed(Duration(milliseconds: 200), () {
+      setState(() {
+        _controller.pause();
+      });
+    });
   }
 
   @override
@@ -181,44 +293,73 @@ class _PlayVideoState extends State<PlayVideo> {
     return ScreenUtilInit(
       designSize: Size(360, 690),
       builder: (BuildContext context, Widget? child) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              widget.videoName ?? 'Tên video',
-              style: TextStyle(fontSize: 22),
+        return WillPopScope(
+          onWillPop: () async {
+            // Khi bấm nút trở lại
+            if (_isFullScreen) {
+              _toggleFullScreen(); // Tắt chế độ fullscreen nếu đang bật
+              return false; // Ngăn chặn đóng màn hình khi đang fullscreen
+            }
+            return true; // Cho phép đóng màn hình nếu không ở chế độ fullscreen
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(
+                widget.videoName ?? 'Tên video',
+                style: TextStyle(fontSize: 22),
+              ),
             ),
-          ),
-          body: GestureDetector(
-            onTap: _toggleControlsVisibility,
-            child: FutureBuilder(
-              future: _initializeVideoPlayerFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        VideoPlayer(_controller),
-                        if (_showControls)
-                          _ControlsOverlay(
-                            controller: _controller,
-                            isFullScreen: _isFullScreen,
-                            onToggleFullScreen: _toggleFullScreen,
-                          ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-              },
+            body: GestureDetector(
+              onTap: _toggleControlsVisibility,
+              child: FutureBuilder(
+                future: _initializeVideoPlayerFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return OrientationBuilder(
+                      builder: (context, orientation) {
+                        return _buildVideoPlayer(orientation);
+                      },
+                    );
+                  } else {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildVideoPlayer(Orientation orientation) {
+    double videoWidth = _controller.value.size.width;
+    double videoHeight = _controller.value.size.height;
+
+    if (orientation == Orientation.portrait && !_isFullScreen) {
+      // Set a specific aspect ratio for portrait mode
+      videoWidth = MediaQuery.of(context).size.width;
+      videoHeight = videoWidth * 9 / 16; // Adjust the aspect ratio as needed
+    }
+
+    return Container(
+      key: _videoPlayerKey,
+      width: videoWidth,
+      height: videoHeight,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          VideoPlayer(_controller),
+          if (_showControls)
+            _ControlsOverlay(
+              controller: _controller,
+              isFullScreen: _isFullScreen,
+              onToggleFullScreen: _toggleFullScreen,
+            ),
+        ],
+      ),
     );
   }
 }
@@ -268,14 +409,6 @@ class _ControlsOverlayState extends State<_ControlsOverlay> {
     });
   }
 
-  void _showControlsIfNeeded() {
-    if (!widget.controller.value.isPlaying) {
-      setState(() {
-        _showControls = true;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -309,7 +442,7 @@ class _ControlsOverlayState extends State<_ControlsOverlay> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(
+              _buildControlButton(
                 onPressed: () {
                   if (widget.controller.value.isPlaying) {
                     widget.controller.pause();
@@ -322,25 +455,22 @@ class _ControlsOverlayState extends State<_ControlsOverlay> {
                       ? Icons.pause
                       : Icons.play_arrow,
                 ),
-                color: Colors.white,
               ),
-              IconButton(
+              _buildControlButton(
                 onPressed: () {
                   final position =
                       widget.controller.value.position - Duration(seconds: 10);
                   widget.controller.seekTo(position);
                 },
                 icon: Icon(Icons.replay_10),
-                color: Colors.white,
               ),
-              IconButton(
+              _buildControlButton(
                 onPressed: () {
                   final position =
                       widget.controller.value.position + Duration(seconds: 10);
                   widget.controller.seekTo(position);
                 },
                 icon: Icon(Icons.forward_10),
-                color: Colors.white,
               ),
             ],
           ),
@@ -348,25 +478,42 @@ class _ControlsOverlayState extends State<_ControlsOverlay> {
             widget.controller,
             allowScrubbing: true,
             colors: VideoProgressColors(
-              playedColor: Colors.amber,
+              playedColor: Colors.orange,
               bufferedColor: Colors.grey,
             ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(
+              _buildControlButton(
                 onPressed: widget.onToggleFullScreen,
                 icon: Icon(
                   widget.isFullScreen
                       ? Icons.fullscreen_exit
                       : Icons.fullscreen,
+                  color: Colors.orange, // Set the color here
                 ),
-                color: Colors.white,
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildControlButton({
+    required VoidCallback onPressed,
+    required Icon icon,
+  }) {
+    return Padding(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 8.0), // Điều chỉnh khoảng cách
+      child: IconButton(
+        onPressed: onPressed,
+        icon: icon,
+        color: Colors.orange, // Đặt màu chính cho biểu tượng
+        splashColor: Colors.blue, // Đặt màu khi nhấn
+        highlightColor: Colors.transparent, // Tắt màu khi giữ
       ),
     );
   }

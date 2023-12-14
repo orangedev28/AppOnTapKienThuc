@@ -7,15 +7,107 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:app_ontapkienthuc/ui/background/background.dart';
+
+class SubjectListForPDFs extends StatefulWidget {
+  @override
+  _SubjectListState createState() => _SubjectListState();
+}
+
+class _SubjectListState extends State<SubjectListForPDFs> {
+  List<Map<String, dynamic>> subjects = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    final uri = Uri.parse(ApiUrls.subjectsUrl);
+    http.Response response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      try {
+        final List<dynamic> subjectData = json.decode(response.body);
+
+        setState(() {
+          subjects = List<Map<String, dynamic>>.from(subjectData);
+        });
+      } catch (e) {
+        print("Error parsing JSON: $e");
+      }
+    } else {
+      print("HTTP error: ${response.statusCode}");
+    }
+  }
+
+  Color mySkyBlueColor = Color.fromRGBO(135, 206, 235, 1);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Danh sách môn học",
+          style: TextStyle(fontSize: 22),
+        ),
+      ),
+      body: Stack(
+        children: [
+          // Add your Background widget as the first child
+          Background(),
+          GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, // Số cột
+              crossAxisSpacing: 8.0, // Khoảng cách giữa các ô theo chiều ngang
+              mainAxisSpacing: 8.0, // Khoảng cách giữa các ô theo chiều dọc
+            ),
+            itemBuilder: (context, index) {
+              return Padding(
+                padding:
+                    const EdgeInsets.all(8.0), // Add padding around the button
+                child: ElevatedButton(
+                  child: Text(
+                    subjects[index]['namesubject'],
+                    style: TextStyle(fontSize: 18), // Reduce the font size
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.all(16.0), // Increase the padding
+                    backgroundColor: mySkyBlueColor,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => PDFList(
+                          subjectId: subjects[index]['id'],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+            itemCount: subjects.length,
+          ),
+        ], // Close the list of Stack children here
+      ),
+    );
+  }
+}
 
 class PDFList extends StatefulWidget {
+  final String subjectId;
+
+  PDFList({required this.subjectId});
+
   @override
   _PDFList createState() => _PDFList();
 }
 
 class _PDFList extends State<PDFList> {
   List<Map<String, String>> documents = [];
-  String searchKeyword = ""; // Từ khóa tìm kiếm
+  String searchKeyword = "";
 
   @override
   void initState() {
@@ -40,7 +132,9 @@ class _PDFList extends State<PDFList> {
               .map<Map<String, String>>((item) => {
                     'namedocument': item['namedocument'].toString(),
                     'linkdocument': item['linkdocument'].toString(),
+                    'subject_id': item['subject_id'].toString()
                   })
+              .where((document) => document['subject_id'] == widget.subjectId)
               .toList();
         } else {
           throw Exception('Response is not a list');
@@ -95,29 +189,33 @@ class _PDFList extends State<PDFList> {
               itemCount: filteredDocuments.length,
               itemBuilder: (context, index) {
                 final document = filteredDocuments[index];
-                return ListTile(
-                  title: Text(
-                    document['namedocument'] ?? 'Tên tài liệu',
-                    style: TextStyle(
-                      fontSize: 20.0,
-                      color: Colors.green,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ViewPDF(
-                          documentLink: document['linkdocument'],
-                          documentName: document['namedocument'],
-                        ),
+                return Card(
+                  elevation: 2, // Add some elevation for a shadow effect
+                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: ListTile(
+                    title: Text(
+                      document['namedocument'] ?? 'Tên tài liệu',
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        color: Colors.green,
                       ),
-                    ).then((value) {
-                      setState(() {
-                        // Refresh the list if needed
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ViewPDF(
+                            documentLink: document['linkdocument'],
+                            documentName: document['namedocument'],
+                          ),
+                        ),
+                      ).then((value) {
+                        setState(() {
+                          // Refresh the list if needed
+                        });
                       });
-                    });
-                  },
+                    },
+                  ),
                 );
               },
             ),
