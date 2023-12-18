@@ -51,7 +51,6 @@ class _SubjectListState extends State<SubjectList> {
       ),
       body: Stack(
         children: [
-          // Add your Background widget as the first child
           Background(),
           GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -61,15 +60,14 @@ class _SubjectListState extends State<SubjectList> {
             ),
             itemBuilder: (context, index) {
               return Padding(
-                padding:
-                    const EdgeInsets.all(8.0), // Add padding around the button
+                padding: const EdgeInsets.all(8.0),
                 child: ElevatedButton(
                   child: Text(
                     subjects[index]['namesubject'],
-                    style: TextStyle(fontSize: 18), // Reduce the font size
+                    style: TextStyle(fontSize: 18),
                   ),
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(16.0), // Increase the padding
+                    padding: EdgeInsets.all(16.0),
                     backgroundColor: mySkyBlueColor,
                   ),
                   onPressed: () {
@@ -86,7 +84,7 @@ class _SubjectListState extends State<SubjectList> {
             },
             itemCount: subjects.length,
           ),
-        ], // Close the list of Stack children here
+        ],
       ),
     );
   }

@@ -26,12 +26,8 @@ class _TopicSelectionScreenState extends State<TopicSelectionScreen> {
     if (response.statusCode == 200) {
       try {
         final List<dynamic> data = json.decode(response.body);
-        if (data is List) {
-          subjects = data.cast<Map<String, dynamic>>().toList();
-          setState(() {});
-        } else {
-          print("Invalid data format from API");
-        }
+        subjects = data.cast<Map<String, dynamic>>().toList();
+        setState(() {});
       } catch (e) {
         print("Error parsing JSON: $e");
       }
@@ -71,8 +67,7 @@ class _TopicSelectionScreenState extends State<TopicSelectionScreen> {
               ],
               onChanged: (Map<String, dynamic>? value) {
                 setState(() {
-                  selectedSubject =
-                      value?['id']?.toString(); // Convert int? to String?
+                  selectedSubject = value?['id']?.toString();
                 });
               },
             ),
@@ -134,12 +129,8 @@ class _AutoQuizState extends State<AutoQuiz> {
     if (response.statusCode == 200) {
       try {
         final List<dynamic> data = json.decode(response.body);
-        if (data is List) {
-          autoQuestions = data.cast<Map<String, dynamic>>().toList();
-          setState(() {});
-        } else {
-          print("Invalid data format from API");
-        }
+        autoQuestions = data.cast<Map<String, dynamic>>().toList();
+        setState(() {});
       } catch (e) {
         print("Error parsing JSON: $e");
       }
@@ -148,32 +139,29 @@ class _AutoQuizState extends State<AutoQuiz> {
     }
   }
 
-  void checkAnswer(String selectedAnswer) {
+  void checkAnswer(String selectedanswer) {
     if (!quizCompleted) {
       String correctAnswer =
           autoQuestions[currentQuestionIndex]['correctanswer'];
-      bool isCorrect = selectedAnswer == correctAnswer;
+      bool iscorrect = selectedanswer == correctAnswer;
 
       setState(() {
-        autoQuestions[currentQuestionIndex]['selectedanswer'] = selectedAnswer;
-        autoQuestions[currentQuestionIndex]['iscorrect'] = isCorrect;
+        autoQuestions[currentQuestionIndex]['selectedanswer'] = selectedanswer;
+        autoQuestions[currentQuestionIndex]['iscorrect'] = iscorrect;
 
-        if (isCorrect) {
-          // Update score by distributing 10 points equally among questions
-          score = ((currentQuestionIndex + 1) * 10) ~/ autoQuestions.length;
+        if (iscorrect) {
+          score++;
         }
       });
 
-      // Delay for a moment to show correct/incorrect feedback
-      Future.delayed(Duration(seconds: 1), () {
-        if (currentQuestionIndex < autoQuestions.length - 1) {
-          goToNextQuestion();
-        } else {
-          // Quiz completed
-          setState(() {
-            quizCompleted = true;
-          });
-        }
+      goToNextQuestion();
+    }
+  }
+
+  void checkQuizCompletion() {
+    if (currentQuestionIndex == autoQuestions.length) {
+      setState(() {
+        quizCompleted = true;
       });
     }
   }
@@ -183,6 +171,9 @@ class _AutoQuizState extends State<AutoQuiz> {
       setState(() {
         currentQuestionIndex++;
       });
+      checkQuizCompletion();
+    } else {
+      quizCompleted = true;
     }
   }
 
@@ -199,6 +190,10 @@ class _AutoQuizState extends State<AutoQuiz> {
     });
 
     fetchRandomQuestions();
+  }
+
+  double calculateAverageScore() {
+    return (score / autoQuestions.length) * 10;
   }
 
   @override
@@ -260,7 +255,7 @@ class _AutoQuizState extends State<AutoQuiz> {
             SizedBox(height: 16.0),
             if (quizCompleted)
               Text(
-                'Điểm của bạn: $score/10',
+                'Điểm của bạn: ${calculateAverageScore().toStringAsFixed(1)}/10',
                 style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
               ),
             SizedBox(height: 16.0),
@@ -268,7 +263,6 @@ class _AutoQuizState extends State<AutoQuiz> {
               ElevatedButton(
                 child: Text('Xem đáp án'),
                 onPressed: () {
-                  // Show correct/incorrect answers
                   _showAnswersDialog();
                 },
               ),
@@ -278,6 +272,64 @@ class _AutoQuizState extends State<AutoQuiz> {
                 child: Text('Tạo đề mới'),
                 onPressed: resetQuiz,
               ),
+            SizedBox(height: 16.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (currentQuestionIndex > 0)
+                  Container(
+                    //margin: EdgeInsets.only(
+                    //ottom: 10 * MediaQuery.of(context).devicePixelRatio),
+                    child: ElevatedButton(
+                      child: Text('Câu trước'),
+                      onPressed: () {
+                        setState(() {
+                          currentQuestionIndex--;
+                        });
+                      },
+                    ),
+                  ),
+                if (currentQuestionIndex < autoQuestions.length - 1)
+                  Container(
+                    //margin: EdgeInsets.only(
+                    // margin bot cách bên dưới 10
+                    //bottom: 10 * MediaQuery.of(context).devicePixelRatio),
+                    child: ElevatedButton(
+                      child: Text('Câu tiếp theo'),
+                      onPressed: () {
+                        // Check if the selected answer is null or empty
+                        if (autoQuestions[currentQuestionIndex]
+                                    ['selectedanswer'] ==
+                                null ||
+                            autoQuestions[currentQuestionIndex]
+                                    ['selectedanswer']
+                                .isEmpty) {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text('Hãy chọn đáp án!'),
+                                actions: [
+                                  ElevatedButton(
+                                    child: Text('OK'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        } else {
+                          setState(() {
+                            currentQuestionIndex++;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -372,7 +424,7 @@ class _AutoQuizState extends State<AutoQuiz> {
                   ],
                 ),
               Text(
-                'Điểm của bạn: $score/10',
+                'Điểm của bạn: ${calculateAverageScore().toStringAsFixed(1)}/10',
                 style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
               ),
             ],

@@ -1,7 +1,7 @@
 import 'package:app_ontapkienthuc/login/login_account.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:app_ontapkienthuc/home.dart';
+import 'package:app_ontapkienthuc/home/home.dart';
 
 void main() {
   runApp(MyApp());

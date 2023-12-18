@@ -1,4 +1,4 @@
-import 'package:app_ontapkienthuc/ui/forms/register_form.dart';
+import 'package:app_ontapkienthuc/ui/forms_account/register_form.dart';
 import 'package:flutter/material.dart';
 import 'package:app_ontapkienthuc/ui/background/background.dart';
 

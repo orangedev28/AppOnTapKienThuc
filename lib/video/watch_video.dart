@@ -54,7 +54,6 @@ class _SubjectListState extends State<SubjectListForVideos> {
       ),
       body: Stack(
         children: [
-          // Add your Background widget as the first child
           Background(),
           GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -89,7 +88,7 @@ class _SubjectListState extends State<SubjectListForVideos> {
             },
             itemCount: subjects.length,
           ),
-        ], // Close the list of Stack children here
+        ],
       ),
     );
   }
@@ -119,7 +118,7 @@ class _VideoListState extends State<VideoList> {
   }
 
   Future<List<Map<String, String>>?> fetchVideos() async {
-    final uri = Uri.parse(ApiUrls.videossUrl); // Set the API URL for videos
+    final uri = Uri.parse(ApiUrls.videossUrl);
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -209,9 +208,7 @@ class _VideoListState extends State<VideoList> {
                           ),
                         ),
                       ).then((value) {
-                        setState(() {
-                          // Refresh the list if needed
-                        });
+                        setState(() {});
                       });
                     },
                   ),
@@ -241,11 +238,12 @@ class _PlayVideoState extends State<PlayVideo> {
   bool _showControls = true;
   bool _isFullScreen = false;
   GlobalKey _videoPlayerKey = GlobalKey();
+  bool _showAppBar = true;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset(
+    _controller = VideoPlayerController.network(
       widget.videoLink!,
     );
     _initializeVideoPlayerFuture = _controller.initialize();
@@ -266,6 +264,8 @@ class _PlayVideoState extends State<PlayVideo> {
   void _toggleFullScreen() {
     setState(() {
       _isFullScreen = !_isFullScreen;
+      _showAppBar =
+          !_isFullScreen; // Ẩn AppBar khi chuyển sang chế độ fullscreen
     });
 
     if (_isFullScreen) {
@@ -295,20 +295,21 @@ class _PlayVideoState extends State<PlayVideo> {
       builder: (BuildContext context, Widget? child) {
         return WillPopScope(
           onWillPop: () async {
-            // Khi bấm nút trở lại
             if (_isFullScreen) {
-              _toggleFullScreen(); // Tắt chế độ fullscreen nếu đang bật
-              return false; // Ngăn chặn đóng màn hình khi đang fullscreen
+              _toggleFullScreen();
+              return false;
             }
-            return true; // Cho phép đóng màn hình nếu không ở chế độ fullscreen
+            return true;
           },
           child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                widget.videoName ?? 'Tên video',
-                style: TextStyle(fontSize: 22),
-              ),
-            ),
+            appBar: _showAppBar
+                ? AppBar(
+                    title: Text(
+                      widget.videoName ?? 'Tên video',
+                      style: TextStyle(fontSize: 22),
+                    ),
+                  )
+                : null, // Ẩn AppBar nếu _showAppBar là false
             body: GestureDetector(
               onTap: _toggleControlsVisibility,
               child: FutureBuilder(
@@ -339,9 +340,8 @@ class _PlayVideoState extends State<PlayVideo> {
     double videoHeight = _controller.value.size.height;
 
     if (orientation == Orientation.portrait && !_isFullScreen) {
-      // Set a specific aspect ratio for portrait mode
       videoWidth = MediaQuery.of(context).size.width;
-      videoHeight = videoWidth * 9 / 16; // Adjust the aspect ratio as needed
+      videoHeight = videoWidth * 9 / 16;
     }
 
     return Container(
@@ -491,7 +491,7 @@ class _ControlsOverlayState extends State<_ControlsOverlay> {
                   widget.isFullScreen
                       ? Icons.fullscreen_exit
                       : Icons.fullscreen,
-                  color: Colors.orange, // Set the color here
+                  color: Colors.orange,
                 ),
               ),
             ],
@@ -506,14 +506,13 @@ class _ControlsOverlayState extends State<_ControlsOverlay> {
     required Icon icon,
   }) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 8.0), // Điều chỉnh khoảng cách
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: IconButton(
         onPressed: onPressed,
         icon: icon,
-        color: Colors.orange, // Đặt màu chính cho biểu tượng
-        splashColor: Colors.blue, // Đặt màu khi nhấn
-        highlightColor: Colors.transparent, // Tắt màu khi giữ
+        color: Colors.orange,
+        splashColor: Colors.blue,
+        highlightColor: Colors.transparent,
       ),
     );
   }

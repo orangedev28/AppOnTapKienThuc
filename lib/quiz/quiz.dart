@@ -5,8 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:app_ontapkienthuc/main.dart';
 import 'package:provider/provider.dart';
 import "package:fluttertoast/fluttertoast.dart";
-import 'package:intl/intl.dart';
-//import 'package:timer_builder/timer_builder.dart'; // thư viện đếm ngược
 
 class QuizListApp extends StatefulWidget {
   final String subjectId;
@@ -32,20 +30,16 @@ class _QuizListAppState extends State<QuizListApp> {
     if (response.statusCode == 200) {
       try {
         final List<dynamic> data = json.decode(response.body);
-        if (data is List) {
-          final List<Map<String, dynamic>> quizList =
-              data.cast<Map<String, dynamic>>();
+        final List<Map<String, dynamic>> quizList =
+            data.cast<Map<String, dynamic>>();
 
-          final filteredQuizzes = quizList
-              .where((quizzes) => quizzes['subject_id'] == widget.subjectId)
-              .toList();
+        final filteredQuizzes = quizList
+            .where((quizzes) => quizzes['subject_id'] == widget.subjectId)
+            .toList();
 
-          setState(() {
-            quizzes = filteredQuizzes;
-          });
-        } else {
-          print("Invalid data format from API");
-        }
+        setState(() {
+          quizzes = filteredQuizzes;
+        });
       } catch (e) {
         print("Error parsing JSON: $e");
       }
@@ -96,7 +90,7 @@ class _QuizListAppState extends State<QuizListApp> {
 
 class QuizApp extends StatefulWidget {
   final String quizId; // Đổi từ int thành String
-  final String nameQuiz; // Thêm thuộc tính nameQuiz
+  final String nameQuiz;
 
   QuizApp({required this.quizId, required this.nameQuiz});
 
@@ -126,22 +120,18 @@ class _QuizAppState extends State<QuizApp> {
     if (response.statusCode == 200) {
       try {
         final List<dynamic> data = json.decode(response.body);
-        if (data is List) {
-          final List<Map<String, dynamic>> questionsList =
-              data.cast<Map<String, dynamic>>();
+        final List<Map<String, dynamic>> questionsList =
+            data.cast<Map<String, dynamic>>();
 
-          // Lọc danh sách câu hỏi theo quizId
-          final filteredQuestions = questionsList
-              .where((question) =>
-                  question['quiz_id'] == widget.quizId) // Sử dụng widget.quizId
-              .toList();
+        // Lọc danh sách câu hỏi theo quizId
+        final filteredQuestions = questionsList
+            .where((question) =>
+                question['quiz_id'] == widget.quizId) // Sử dụng widget.quizId
+            .toList();
 
-          setState(() {
-            questions = filteredQuestions;
-          });
-        } else {
-          print("Invalid data format from API");
-        }
+        setState(() {
+          questions = filteredQuestions;
+        });
       } catch (e) {
         print("Error parsing JSON: $e");
       }
@@ -181,7 +171,7 @@ class _QuizAppState extends State<QuizApp> {
       setState(() {
         currentQuestionIndex++;
       });
-      checkQuizCompletion(); // Thêm dòng này
+      checkQuizCompletion();
     } else {
       showResult = true;
       quizCompleted = true;
@@ -193,7 +183,7 @@ class _QuizAppState extends State<QuizApp> {
       currentQuestionIndex = 0;
       score = 0;
       showResult = false;
-      quizCompleted = false; // Thêm dòng này
+      quizCompleted = false;
 
       for (var question in questions) {
         question['selectedanswer'] = '';
@@ -253,23 +243,23 @@ class _QuizAppState extends State<QuizApp> {
                     // Inside your Widget's build method
                     if (questions.isNotEmpty &&
                         currentQuestionIndex < questions.length)
-                      buildAnswerButton(
-                          questions[currentQuestionIndex]['answer1']),
-                    SizedBox(height: 5.0),
-                    if (questions.isNotEmpty &&
-                        currentQuestionIndex < questions.length)
-                      buildAnswerButton(
-                          questions[currentQuestionIndex]['answer2']),
-                    SizedBox(height: 5.0),
-                    if (questions.isNotEmpty &&
-                        currentQuestionIndex < questions.length)
-                      buildAnswerButton(
-                          questions[currentQuestionIndex]['answer3']),
-                    SizedBox(height: 5.0),
-                    if (questions.isNotEmpty &&
-                        currentQuestionIndex < questions.length)
-                      buildAnswerButton(
-                          questions[currentQuestionIndex]['answer4']),
+                      SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            buildAnswerButton(
+                                questions[currentQuestionIndex]['answer1']),
+                            SizedBox(height: 8.0),
+                            buildAnswerButton(
+                                questions[currentQuestionIndex]['answer2']),
+                            SizedBox(height: 8.0),
+                            buildAnswerButton(
+                                questions[currentQuestionIndex]['answer3']),
+                            SizedBox(height: 8.0),
+                            buildAnswerButton(
+                                questions[currentQuestionIndex]['answer4']),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               SizedBox(height: 16.0),
@@ -336,47 +326,60 @@ class _QuizAppState extends State<QuizApp> {
                     },
                   ),
                 ),
-              SizedBox(height: 16.0),
+              SizedBox(height: 0.5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (currentQuestionIndex > 0)
-                    ElevatedButton(
-                      child: Text('Câu trước'),
-                      onPressed: () {
-                        setState(() {
-                          currentQuestionIndex--;
-                        });
-                      },
+                    Container(
+                      //margin: EdgeInsets.only(
+                      //ottom: 10 * MediaQuery.of(context).devicePixelRatio),
+                      child: ElevatedButton(
+                        child: Text('Câu trước'),
+                        onPressed: () {
+                          setState(() {
+                            currentQuestionIndex--;
+                          });
+                        },
+                      ),
                     ),
                   if (currentQuestionIndex < questions.length - 1)
-                    ElevatedButton(
-                      child: Text('Câu tiếp theo'),
-                      onPressed: () {
-                        if (questions[currentQuestionIndex]['selectedanswer'] ==
-                            '') {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text('Hãy chọn đáp án!'),
-                                actions: [
-                                  ElevatedButton(
-                                    child: Text('OK'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        } else {
-                          setState(() {
-                            currentQuestionIndex++;
-                          });
-                        }
-                      },
+                    Container(
+                      //margin: EdgeInsets.only(
+                      // margin bot cách bên dưới 10
+                      //bottom: 10 * MediaQuery.of(context).devicePixelRatio),
+                      child: ElevatedButton(
+                        child: Text('Câu tiếp theo'),
+                        onPressed: () {
+                          // Check if the selected answer is null or empty
+                          if (questions[currentQuestionIndex]
+                                      ['selectedanswer'] ==
+                                  null ||
+                              questions[currentQuestionIndex]['selectedanswer']
+                                  .isEmpty) {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text('Hãy chọn đáp án!'),
+                                  actions: [
+                                    ElevatedButton(
+                                      child: Text('OK'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          } else {
+                            setState(() {
+                              currentQuestionIndex++;
+                            });
+                          }
+                        },
+                      ),
                     ),
                 ],
               ),
@@ -395,12 +398,11 @@ class _QuizAppState extends State<QuizApp> {
     Color backgroundColor;
     if (quizCompleted) {
       if (isSelected && isCorrect) {
-        backgroundColor =
-            Colors.green; // Hiển thị màu xanh nếu câu trả lời đúng
+        backgroundColor = Colors.green;
       } else if (isSelected && !isCorrect) {
-        backgroundColor = Colors.red; // Hiển thị màu đỏ nếu câu trả lời sai
+        backgroundColor = Colors.red;
       } else {
-        backgroundColor = mySkyBlueColor; // Hiển thị màu nền mặc định
+        backgroundColor = mySkyBlueColor;
       }
     } else {
       backgroundColor = isSelected ? Colors.grey : mySkyBlueColor;
@@ -416,7 +418,7 @@ class _QuizAppState extends State<QuizApp> {
         }
       },
       child: Container(
-        height: 60,
+        height: 70,
         alignment: Alignment.center,
         child: Text(
           answerText,

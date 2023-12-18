@@ -34,7 +34,7 @@ dependencies:
 
   intl: ^0.17.0
 
-  video_player: ^2.4.1
+  video_player: ^2.8.1
 
   flutter_screenutil: ^5.9.0
 
@@ -71,12 +71,8 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - assets/images/lake.png
     - assets/images/
     - assets/pdf/
-    - assets/video/testvideo1.mp4
-    - assets/video/
-    - assets/
 
   uses-material-design: true
 

@@ -69,7 +69,7 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
             TextButton(
               child: Text('Không'),
               onPressed: () {
-                Navigator.of(context).pop(); // Đóng hộp thoại cảnh báo
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -169,7 +169,7 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
                   TextButton(
                     child: Text('Hủy'),
                     onPressed: () {
-                      Navigator.of(context).pop(); // Đóng hộp thoại
+                      Navigator.of(context).pop();
                     },
                   ),
                   TextButton(
@@ -205,27 +205,22 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
       return;
     }
 
-    // Password validation rules
     String errorMessage = "";
 
-    // Check if the new password has at least 8 characters
     if (newPassword.length < 8) {
       errorMessage = "Mật khẩu cần ít nhất 8 ký tự, ";
     }
 
-    // Check if the new password has at least 1 uppercase letter
     RegExp upperCaseRegex = RegExp(r'[A-Z]');
     if (!upperCaseRegex.hasMatch(newPassword)) {
       errorMessage += "1 chữ hoa, ";
     }
 
-    // Check if the new password has at least 1 digit
     RegExp digitRegex = RegExp(r'[0-9]');
     if (!digitRegex.hasMatch(newPassword)) {
       errorMessage += "1 số, ";
     }
 
-    // Check if the new password has at least 1 special character
     RegExp specialCharRegex = RegExp(r'[!@#$%^&*(),.?":{}|<>]');
     if (!specialCharRegex.hasMatch(newPassword)) {
       errorMessage += "1 ký tự đặc biệt, ";
@@ -313,7 +308,7 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
       ),
       body: Stack(
         children: [
-          Background(), // Hiển thị background
+          Background(),
           Padding(
             padding: EdgeInsets.only(left: 16.0, right: 16.0, top: 40.0),
             child: SingleChildScrollView(
