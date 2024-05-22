@@ -335,7 +335,7 @@ class _QuizAppState extends State<QuizApp> {
 
   Future<String> getChatbotResponse(
       String question, String correctAnswer) async {
-    //key api
+    //
     final String openaiApiEndpoint =
         'https://api.openai.com/v1/chat/completions';
 
@@ -355,7 +355,7 @@ class _QuizAppState extends State<QuizApp> {
       Uri.parse(openaiApiEndpoint),
       headers: {
         'Content-Type': 'application/json',
-        //'Authorization': 'Bearer $openaiApiKey',
+        //
         'Accept-Charset': 'UTF-8', // Thêm header Accept-Charset
       },
       body: json.encode(requestData),
