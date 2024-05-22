@@ -355,7 +355,7 @@ class _QuizAppState extends State<QuizApp> {
       Uri.parse(openaiApiEndpoint),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $openaiApiKey',
+        //'Authorization': 'Bearer $openaiApiKey',
         'Accept-Charset': 'UTF-8', // Thêm header Accept-Charset
       },
       body: json.encode(requestData),
