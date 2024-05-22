@@ -1,3 +1,4 @@
+import 'package:app_ontapkienthuc/ui/background/background.dart';
 import 'package:app_ontapkienthuc/url/api_url.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -6,10 +7,137 @@ import 'package:app_ontapkienthuc/main.dart';
 import 'package:provider/provider.dart';
 import "package:fluttertoast/fluttertoast.dart";
 
+class SubjectListForQuizzes extends StatefulWidget {
+  @override
+  _SubjectListState createState() => _SubjectListState();
+}
+
+class _SubjectListState extends State<SubjectListForQuizzes> {
+  List<Map<String, dynamic>> subjects = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    final uri = Uri.parse(ApiUrls.subjectsUrl);
+    http.Response response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      try {
+        final List<dynamic> subjectData = json.decode(response.body);
+
+        setState(() {
+          subjects = List<Map<String, dynamic>>.from(subjectData);
+        });
+      } catch (e) {
+        print("Error parsing JSON: $e");
+      }
+    } else {
+      print("HTTP error: ${response.statusCode}");
+    }
+  }
+
+  Color mySkyBlueColor = Color.fromRGBO(135, 206, 235, 1);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Danh sách môn học",
+          style: TextStyle(fontSize: 22),
+        ),
+      ),
+      body: Stack(
+        children: [
+          Background(),
+          GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+            ),
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  child: Text(
+                    subjects[index]['namesubject'],
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.all(16.0),
+                    backgroundColor: mySkyBlueColor,
+                  ),
+                  onPressed: () {
+                    print(
+                        "Button Pressed"); // Add this line to check if the button is pressed
+                    showDifficultyDialog(context, subjects[index]['id']);
+                  },
+                ),
+              );
+            },
+            itemCount: subjects.length,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showDifficultyDialog(BuildContext context, String subjectId) {
+    Map<String, String> difficultyMapping = {
+      'Dễ': 'easy',
+      'Trung Bình': 'medium',
+      'Khó': 'hard',
+    };
+
+    String selectedDifficulty = difficultyMapping.keys.first;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Chọn mức độ bài kiểm tra'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: difficultyMapping.keys.map((level) {
+                return ListTile(
+                  title: Text(level),
+                  onTap: () {
+                    setState(() {
+                      selectedDifficulty = difficultyMapping[level]!;
+                    });
+                    Navigator.pop(context);
+
+                    // Chắc chắn rằng subjectId được truyền đúng
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => QuizListApp(
+                          subjectId: subjectId, // Thêm subjectId vào đây
+                          difficulty: selectedDifficulty,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class QuizListApp extends StatefulWidget {
   final String subjectId;
+  final String difficulty;
 
-  QuizListApp({required this.subjectId});
+  QuizListApp({required this.subjectId, required this.difficulty});
 
   @override
   _QuizListAppState createState() => _QuizListAppState();
@@ -17,6 +145,7 @@ class QuizListApp extends StatefulWidget {
 
 class _QuizListAppState extends State<QuizListApp> {
   List<Map<String, dynamic>> quizzes = [];
+
   @override
   void initState() {
     super.initState();
@@ -24,7 +153,8 @@ class _QuizListAppState extends State<QuizListApp> {
   }
 
   Future<void> fetchQuizzes() async {
-    final uri = Uri.parse(ApiUrls.quizzesUrl);
+    final uri = Uri.parse(
+        '${ApiUrls.quizzesUrl}?difficulty=${widget.difficulty}&subject_id=${widget.subjectId}');
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -33,12 +163,8 @@ class _QuizListAppState extends State<QuizListApp> {
         final List<Map<String, dynamic>> quizList =
             data.cast<Map<String, dynamic>>();
 
-        final filteredQuizzes = quizList
-            .where((quizzes) => quizzes['subject_id'] == widget.subjectId)
-            .toList();
-
         setState(() {
-          quizzes = filteredQuizzes;
+          quizzes = quizList;
         });
       } catch (e) {
         print("Error parsing JSON: $e");
@@ -51,48 +177,58 @@ class _QuizListAppState extends State<QuizListApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Danh sách bài kiểm tra',
-            style: TextStyle(fontSize: 22),
-          ),
+      appBar: AppBar(
+        title: Text(
+          'Danh sách bài kiểm tra',
+          style: TextStyle(fontSize: 22),
         ),
-        body: ListView.builder(
-          itemCount: quizzes.length,
-          itemBuilder: (context, index) {
-            return Card(
-              elevation: 2, // Add some elevation for a shadow effect
-              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: ListTile(
-                title: Text(
-                  quizzes[index]['namequiz'],
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.green,
-                  ),
+      ),
+      body: ListView.builder(
+        itemCount: quizzes.length,
+        itemBuilder: (context, index) {
+          return Card(
+            elevation: 2,
+            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: ListTile(
+              title: Text(
+                quizzes[index]['namequiz'],
+                style: TextStyle(
+                  fontSize: 20.0,
+                  color: Colors.green,
                 ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => QuizApp(
-                        quizId: quizzes[index]['id'],
-                        nameQuiz: quizzes[index]['namequiz'],
-                      ),
-                    ),
-                  );
-                },
               ),
-            );
-          },
-        ));
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => QuizApp(
+                      quizId: quizzes[index]['id'],
+                      nameQuiz: quizzes[index]['namequiz'],
+                      subjectId: widget.subjectId,
+                      difficulty: widget.difficulty,
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 
 class QuizApp extends StatefulWidget {
-  final String quizId; // Đổi từ int thành String
+  final int quizId; // Thay đổi kiểu dữ liệu từ String sang int
   final String nameQuiz;
+  final String subjectId;
+  final String difficulty;
 
-  QuizApp({required this.quizId, required this.nameQuiz});
+  QuizApp({
+    required this.quizId,
+    required this.nameQuiz,
+    required this.subjectId,
+    required this.difficulty,
+  });
 
   @override
   _QuizAppState createState() => _QuizAppState();
@@ -114,7 +250,8 @@ class _QuizAppState extends State<QuizApp> {
   }
 
   Future<void> fetchQuestions() async {
-    final uri = Uri.parse(ApiUrls.questionsUrl);
+    final uri = Uri.parse(
+        '${ApiUrls.questionsUrl}?quiz_id=${widget.quizId}&difficulty=${widget.difficulty}');
     http.Response response = await http.get(uri);
 
     if (response.statusCode == 200) {
@@ -123,10 +260,10 @@ class _QuizAppState extends State<QuizApp> {
         final List<Map<String, dynamic>> questionsList =
             data.cast<Map<String, dynamic>>();
 
-        // Lọc danh sách câu hỏi theo quizId
         final filteredQuestions = questionsList
             .where((question) =>
-                question['quiz_id'] == widget.quizId) // Sử dụng widget.quizId
+                question['quiz_id'] ==
+                widget.quizId.toString()) // Chuyển đổi sang String
             .toList();
 
         setState(() {
@@ -196,6 +333,114 @@ class _QuizAppState extends State<QuizApp> {
     return (score / questions.length) * 10;
   }
 
+  Future<String> getChatbotResponse(
+      String question, String correctAnswer) async {
+    final String openaiApiKey =
+        '***REMOVED***';
+    final String openaiApiEndpoint =
+        'https://api.openai.com/v1/chat/completions';
+
+    final Map<String, dynamic> requestData = {
+      'model': 'gpt-3.5-turbo-0613',
+      'messages': [
+        {
+          'role': 'user',
+          'content':
+              '$correctAnswer Đây là đáp án đúng cho câu hỏi: $question Hãy giải thích thêm giúp tôi để có thể hiểu rõ hơn về câu này, nhưng giải thích ngắn gọn thôi nhé!'
+        }
+      ],
+      'max_tokens': 1000, // Số lượng token tối đa trong câu trả lời
+    };
+
+    final response = await http.post(
+      Uri.parse(openaiApiEndpoint),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $openaiApiKey',
+        'Accept-Charset': 'UTF-8', // Thêm header Accept-Charset
+      },
+      body: json.encode(requestData),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData =
+          json.decode(utf8.decode(response.bodyBytes));
+
+      // Kiểm tra nếu có thông tin trả lời từ ChatGPT
+      if (responseData.containsKey('choices') &&
+          responseData['choices'].isNotEmpty &&
+          responseData['choices'][0].containsKey('message') &&
+          responseData['choices'][0]['message'].containsKey('content')) {
+        // Lấy nội dung của câu trả lời từ phản hồi
+        final String chatbotResponse =
+            responseData['choices'][0]['message']['content'];
+        return chatbotResponse;
+      } else {
+        throw Exception('No response content found');
+      }
+    } else {
+      throw Exception('Failed to communicate with OpenAI');
+    }
+  }
+
+  void showExplanationDialog(
+      BuildContext context, String question, String correctAnswer) async {
+    try {
+      // Gửi yêu cầu đến chatbot và nhận phản hồi
+      final response = await getChatbotResponse(question, correctAnswer);
+
+      // Hiển thị hộp thoại với câu trả lời từ chatbot
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Giải thích chi tiết từ Chatbot AI',
+                style:
+                    TextStyle(fontFamily: 'CustomFont')), // Sử dụng font ở đây
+            content: SingleChildScrollView(
+              child: Text(
+                response,
+                textAlign: TextAlign
+                    .left, // Đảm bảo văn bản hiển thị từ trái sang phải
+                style:
+                    TextStyle(fontFamily: 'CustomFont'), // Sử dụng font ở đây
+              ),
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Đóng'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      // Xử lý nếu có lỗi xảy ra trong quá trình gửi yêu cầu hoặc nhận phản hồi từ chatbot
+      print('Error: $e');
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Lỗi'),
+            content:
+                Text('Đã xảy ra lỗi khi lấy giải thích. Vui lòng thử lại sau.'),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Đóng'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -240,26 +485,23 @@ class _QuizAppState extends State<QuizApp> {
                   currentQuestionIndex < questions.length)
                 Column(
                   children: [
-                    // Inside your Widget's build method
-                    if (questions.isNotEmpty &&
-                        currentQuestionIndex < questions.length)
-                      SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            buildAnswerButton(
-                                questions[currentQuestionIndex]['answer1']),
-                            SizedBox(height: 8.0),
-                            buildAnswerButton(
-                                questions[currentQuestionIndex]['answer2']),
-                            SizedBox(height: 8.0),
-                            buildAnswerButton(
-                                questions[currentQuestionIndex]['answer3']),
-                            SizedBox(height: 8.0),
-                            buildAnswerButton(
-                                questions[currentQuestionIndex]['answer4']),
-                          ],
-                        ),
+                    SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          buildAnswerButton(
+                              questions[currentQuestionIndex]['answer1']),
+                          SizedBox(height: 8.0),
+                          buildAnswerButton(
+                              questions[currentQuestionIndex]['answer2']),
+                          SizedBox(height: 8.0),
+                          buildAnswerButton(
+                              questions[currentQuestionIndex]['answer3']),
+                          SizedBox(height: 8.0),
+                          buildAnswerButton(
+                              questions[currentQuestionIndex]['answer4']),
+                        ],
                       ),
+                    ),
                   ],
                 ),
               SizedBox(height: 16.0),
@@ -312,16 +554,32 @@ class _QuizAppState extends State<QuizApp> {
                         answerColor = Colors.green;
                       }
 
-                      return ListTile(
-                        title: Text(
-                          'Câu ${index + 1}: ${questions[index]['question']}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16.0),
-                        ),
-                        subtitle: Text(
-                          answerText,
-                          style: TextStyle(color: answerColor, fontSize: 16.0),
-                        ),
+                      return Column(
+                        children: [
+                          ListTile(
+                            title: Text(
+                              'Câu ${index + 1}: ${questions[index]['question']}',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16.0),
+                            ),
+                            subtitle: Text(
+                              answerText,
+                              style:
+                                  TextStyle(color: answerColor, fontSize: 16.0),
+                            ),
+                            trailing: ElevatedButton(
+                              onPressed: () {
+                                showExplanationDialog(
+                                  context,
+                                  questions[index]['question'],
+                                  questions[index]['correctanswer'],
+                                );
+                              },
+                              child: Text('Giải thích chi tiết'),
+                            ),
+                          ),
+                          Divider(),
+                        ],
                       );
                     },
                   ),
@@ -332,8 +590,8 @@ class _QuizAppState extends State<QuizApp> {
                 children: [
                   if (currentQuestionIndex > 0)
                     Container(
-                      //margin: EdgeInsets.only(
-                      //ottom: 10 * MediaQuery.of(context).devicePixelRatio),
+                      margin: EdgeInsets.only(
+                          bottom: 10 * MediaQuery.of(context).devicePixelRatio),
                       child: ElevatedButton(
                         child: Text('Câu trước'),
                         onPressed: () {
@@ -345,13 +603,11 @@ class _QuizAppState extends State<QuizApp> {
                     ),
                   if (currentQuestionIndex < questions.length - 1)
                     Container(
-                      //margin: EdgeInsets.only(
-                      // margin bot cách bên dưới 10
-                      //bottom: 10 * MediaQuery.of(context).devicePixelRatio),
+                      margin: EdgeInsets.only(
+                          bottom: 10 * MediaQuery.of(context).devicePixelRatio),
                       child: ElevatedButton(
                         child: Text('Câu tiếp theo'),
                         onPressed: () {
-                          // Check if the selected answer is null or empty
                           if (questions[currentQuestionIndex]
                                       ['selectedanswer'] ==
                                   null ||
@@ -402,10 +658,10 @@ class _QuizAppState extends State<QuizApp> {
       } else if (isSelected && !isCorrect) {
         backgroundColor = Colors.red;
       } else {
-        backgroundColor = mySkyBlueColor;
+        backgroundColor = Colors.blue;
       }
     } else {
-      backgroundColor = isSelected ? Colors.grey : mySkyBlueColor;
+      backgroundColor = isSelected ? Colors.grey : Colors.blue;
     }
 
     return ElevatedButton(
@@ -431,8 +687,7 @@ class _QuizAppState extends State<QuizApp> {
     );
   }
 
-  Future<void> saveScore(
-      String quizId, double score, BuildContext context) async {
+  Future<void> saveScore(int quizId, double score, BuildContext context) async {
     int loggedInUserId =
         Provider.of<AuthProvider>(context, listen: false).userId;
 

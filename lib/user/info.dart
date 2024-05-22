@@ -93,13 +93,11 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
     final XFile? pickedFile =
         await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      // Thay đổi UI hiển thị hình ảnh đã chọn
       setState(() {
         profileImage = pickedFile.path;
         print(pickedFile.path);
       });
 
-      // Lưu đường dẫn ảnh vào cơ sở dữ liệu
       await updateProfileImageInDatabase(pickedFile.path);
     }
   }
@@ -124,6 +122,12 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
 
       if (response.statusCode == 200) {
         print('Ảnh thay đổi đã được lưu vào cơ sở dữ liệu!');
+        Fluttertoast.showToast(
+          msg: "Đổi ảnh đại diện thành công!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          fontSize: 16.0,
+        );
       } else {
         print('Lỗi: ${response.statusCode}');
       }
@@ -194,6 +198,26 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
   void _changePassword(String currentPassword, String newPassword,
       String confirmPassword) async {
     int userId = Provider.of<AuthProvider>(context, listen: false).userId;
+
+    if (currentPassword == "" || newPassword == "" || confirmPassword == "") {
+      Fluttertoast.showToast(
+        msg: "Các trường không được bỏ trống!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        fontSize: 16.0,
+      );
+      return;
+    }
+
+    if (newPassword == currentPassword) {
+      Fluttertoast.showToast(
+        msg: "Mật khẩu mới bị trùng mật khẩu cũ!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        fontSize: 16.0,
+      );
+      return;
+    }
 
     if (newPassword != confirmPassword) {
       Fluttertoast.showToast(

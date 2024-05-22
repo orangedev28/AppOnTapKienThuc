@@ -1,5 +1,6 @@
 import 'package:app_ontapkienthuc/aboutme/about_me.dart';
 import 'package:app_ontapkienthuc/menu/menu.dart';
+import 'package:app_ontapkienthuc/saved/review_note.dart';
 import 'package:app_ontapkienthuc/user/info.dart';
 import 'package:flutter/material.dart';
 
@@ -14,6 +15,7 @@ class _MyHomePage extends State<MyHomePage> {
   int selectedIndex = 0;
   Widget _home = MenuHome();
   Widget _myInfo = UserInfoWidget();
+  Widget _saved = MenuSaved();
   Widget _aboutUs = AboutUs();
 
   @override
@@ -67,6 +69,10 @@ class _MyHomePage extends State<MyHomePage> {
               label: "Tài Khoản",
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.favorite),
+              label: "Đã Lưu",
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.info),
               label: "Thông Tin",
             ),
@@ -84,6 +90,8 @@ class _MyHomePage extends State<MyHomePage> {
       return this._home;
     } else if (this.selectedIndex == 1) {
       return this._myInfo;
+    } else if (this.selectedIndex == 2) {
+      return this._saved;
     } else {
       return this._aboutUs;
     }

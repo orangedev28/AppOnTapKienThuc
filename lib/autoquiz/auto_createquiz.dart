@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import "package:fluttertoast/fluttertoast.dart";
+import 'dart:async';
 
 class TopicSelectionScreen extends StatefulWidget {
   @override
@@ -20,7 +21,7 @@ class _TopicSelectionScreenState extends State<TopicSelectionScreen> {
   }
 
   Future<void> fetchSubjects() async {
-    final apiUrl = ApiUrls.subjectforautoquizUrl;
+    final apiUrl = ApiUrls.subjectsUrl;
     final response = await http.get(Uri.parse(apiUrl));
 
     if (response.statusCode == 200) {
@@ -114,11 +115,14 @@ class _AutoQuizState extends State<AutoQuiz> {
   int currentQuestionIndex = 0;
   int score = 0;
   bool quizCompleted = false;
+  int timerSeconds = 10; // Thời gian đếm ngược, đơn vị là giây
+  late Timer timer;
 
   @override
   void initState() {
     super.initState();
     fetchRandomQuestions();
+    startTimer();
   }
 
   Future<void> fetchRandomQuestions() async {
@@ -187,13 +191,85 @@ class _AutoQuizState extends State<AutoQuiz> {
         question['selectedanswer'] = '';
         question['iscorrect'] = false;
       }
-    });
 
+      // Reset thời gian đếm ngược về giá trị ban đầu (5 giây)
+    });
+    timerSeconds = 10;
+    // Bắt đầu đếm ngược lại
+    startTimer();
+
+    // Lấy câu hỏi mới
     fetchRandomQuestions();
   }
 
   double calculateAverageScore() {
     return (score / autoQuestions.length) * 10;
+  }
+
+  void startTimer() {
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+      if (timerSeconds > 0 && !quizCompleted) {
+        setState(() {
+          timerSeconds--;
+        });
+
+        // Show toast when timer is at 3 seconds
+        if (timerSeconds == 8) {
+          checkUnansweredQuestions();
+        }
+        if (timerSeconds == 3) {
+          checkUnansweredQuestions();
+        }
+      } else if (quizCompleted) {
+        timer.cancel();
+        _showAnswersDialog();
+      } else if (!quizCompleted) {
+        timer.cancel();
+
+        // Bài kiểm tra chưa hoàn thành, hãy hoàn thành và hiển thị đáp án
+        finishQuiz();
+      }
+    });
+  }
+
+  void checkUnansweredQuestions() {
+    if (containsUnansweredQuestion()) {
+      Fluttertoast.showToast(
+        msg: "Bạn còn câu hỏi chưa chọn đáp án!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        fontSize: 16.0,
+      );
+    }
+  }
+
+  void finishQuiz() {
+    setState(() {
+      quizCompleted = true;
+    });
+
+    int totalCorrectAnswers = 0;
+
+    for (var question in autoQuestions) {
+      if (question['selectedanswer'] != null) {
+        // Câu đã chọn
+        if (question['selectedanswer'] == question['correctanswer']) {
+          // Nếu câu đã chọn đúng
+          question['iscorrect'] = true;
+          totalCorrectAnswers += 1;
+        } else {
+          // Nếu câu đã chọn sai
+          question['iscorrect'] = false;
+        }
+      } else {
+        // Câu không được chọn (null)
+        question['iscorrect'] = false;
+      }
+    }
+
+    score = (totalCorrectAnswers / autoQuestions.length * 10).toInt();
+
+    _showAnswersAndScoreDialog();
   }
 
   @override
@@ -223,6 +299,11 @@ class _AutoQuizState extends State<AutoQuiz> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Text(
+              'Thời gian còn lại: ${timerSeconds ~/ 60}:${(timerSeconds % 60).toString().padLeft(2, '0')}',
+              style: TextStyle(fontSize: 18.0, color: Colors.red),
+            ),
+            SizedBox(height: 16.0),
             if (!quizCompleted)
               Text(
                 'Câu ${currentQuestionIndex + 1}/${autoQuestions.length}',
@@ -253,15 +334,10 @@ class _AutoQuizState extends State<AutoQuiz> {
                 ],
               ),
             SizedBox(height: 16.0),
-            if (quizCompleted)
-              Text(
-                'Điểm của bạn: ${calculateAverageScore().toStringAsFixed(1)}/10',
-                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-              ),
-            SizedBox(height: 16.0),
+            if (quizCompleted) SizedBox(height: 16.0),
             if (quizCompleted)
               ElevatedButton(
-                child: Text('Xem đáp án'),
+                child: Text('Xem kết quả'),
                 onPressed: () {
                   _showAnswersDialog();
                 },
@@ -364,7 +440,7 @@ class _AutoQuizState extends State<AutoQuiz> {
         }
       },
       child: Container(
-        height: 60,
+        height: 75,
         alignment: Alignment.center,
         child: Text(
           answerText,
@@ -377,12 +453,87 @@ class _AutoQuizState extends State<AutoQuiz> {
     );
   }
 
+  bool containsUnansweredQuestion() {
+    return autoQuestions.any((question) =>
+        question['selectedanswer'] == null ||
+        question['selectedanswer'].isEmpty);
+  }
+
   void _showAnswersDialog() {
+    if (containsUnansweredQuestion()) {
+      _showAnswersAndScoreDialog();
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Đáp án'),
+            content: Column(
+              children: [
+                for (int i = 0; i < autoQuestions.length; i++)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Câu ${i + 1}: ${autoQuestions[i]['question']}',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      if (autoQuestions[i]['iscorrect'] == true)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Đáp án đúng: ${autoQuestions[i]['correctanswer']}',
+                              style: TextStyle(color: Colors.green),
+                            ),
+                            SizedBox(height: 8.0),
+                          ],
+                        ),
+                      if (autoQuestions[i]['iscorrect'] == false)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Đáp án đúng: ${autoQuestions[i]['correctanswer']}',
+                              style: TextStyle(color: Colors.green),
+                            ),
+                            Text(
+                              'Đáp án bạn chọn: ${autoQuestions[i]['selectedanswer']}',
+                              style: TextStyle(
+                                color: Colors.red,
+                              ),
+                            ),
+                            SizedBox(height: 8.0),
+                          ],
+                        ),
+                    ],
+                  ),
+                Text(
+                  'Điểm của bạn: ${calculateAverageScore().toStringAsFixed(1)}/10',
+                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Đóng'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void _showAnswersAndScoreDialog() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Đáp án'),
+          title: Text('Kết quả và Đáp án'),
           content: Column(
             children: [
               for (int i = 0; i < autoQuestions.length; i++)
@@ -424,7 +575,7 @@ class _AutoQuizState extends State<AutoQuiz> {
                   ],
                 ),
               Text(
-                'Điểm của bạn: ${calculateAverageScore().toStringAsFixed(1)}/10',
+                'Điểm của bạn: ${score.toStringAsFixed(1)}/10',
                 style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
               ),
             ],

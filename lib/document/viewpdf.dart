@@ -8,6 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:app_ontapkienthuc/ui/background/background.dart';
+import 'package:app_ontapkienthuc/main.dart';
+import 'package:provider/provider.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class SubjectListForPDFs extends StatefulWidget {
   @override
@@ -55,7 +58,6 @@ class _SubjectListState extends State<SubjectListForPDFs> {
       ),
       body: Stack(
         children: [
-          // Add your Background widget as the first child
           Background(),
           GridView.builder(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -65,15 +67,14 @@ class _SubjectListState extends State<SubjectListForPDFs> {
             ),
             itemBuilder: (context, index) {
               return Padding(
-                padding:
-                    const EdgeInsets.all(8.0), // Add padding around the button
+                padding: const EdgeInsets.all(8.0),
                 child: ElevatedButton(
                   child: Text(
                     subjects[index]['namesubject'],
-                    style: TextStyle(fontSize: 18), // Reduce the font size
+                    style: TextStyle(fontSize: 18),
                   ),
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(16.0), // Increase the padding
+                    padding: EdgeInsets.all(16.0),
                     backgroundColor: mySkyBlueColor,
                   ),
                   onPressed: () {
@@ -90,7 +91,7 @@ class _SubjectListState extends State<SubjectListForPDFs> {
             },
             itemCount: subjects.length,
           ),
-        ], // Close the list of Stack children here
+        ],
       ),
     );
   }
@@ -130,6 +131,7 @@ class _PDFList extends State<PDFList> {
         if (data is List) {
           return data
               .map<Map<String, String>>((item) => {
+                    'id': item['id'].toString(),
                     'namedocument': item['namedocument'].toString(),
                     'linkdocument': item['linkdocument'].toString(),
                     'subject_id': item['subject_id'].toString()
@@ -207,12 +209,11 @@ class _PDFList extends State<PDFList> {
                           builder: (context) => ViewPDF(
                             documentLink: document['linkdocument'],
                             documentName: document['namedocument'],
+                            documentId: document['id'],
                           ),
                         ),
                       ).then((value) {
-                        setState(() {
-                          // Refresh the list if needed
-                        });
+                        setState(() {});
                       });
                     },
                   ),
@@ -227,9 +228,10 @@ class _PDFList extends State<PDFList> {
 }
 
 class ViewPDF extends StatefulWidget {
+  final String? documentId;
   final String? documentLink;
   final String? documentName;
-  ViewPDF({this.documentLink, this.documentName});
+  ViewPDF({this.documentId, this.documentLink, this.documentName});
 
   @override
   _ViewPDF createState() => _ViewPDF();
@@ -242,6 +244,7 @@ class _ViewPDF extends State<ViewPDF> {
   void initState() {
     super.initState();
     final documentLink = widget.documentLink;
+    final documentId = widget.documentId;
     if (documentLink != null) {
       fromAsset(documentLink, 'downloaded.pdf').then((f) {
         setState(() {
@@ -254,6 +257,7 @@ class _ViewPDF extends State<ViewPDF> {
                 builder: (context) => PDFScreen(
                   path: pathPDF,
                   documentName: widget.documentName,
+                  documentId: documentId,
                 ),
               ),
             );
@@ -307,8 +311,10 @@ class _ViewPDF extends State<ViewPDF> {
 class PDFScreen extends StatefulWidget {
   final String? path;
   final String? documentName;
+  final String? documentId;
 
-  const PDFScreen({Key? key, this.path, this.documentName}) : super(key: key);
+  const PDFScreen({Key? key, this.path, this.documentName, this.documentId})
+      : super(key: key);
 
   @override
   _PDFScreen createState() => _PDFScreen();
@@ -331,9 +337,15 @@ class _PDFScreen extends State<PDFScreen> with WidgetsBindingObserver {
           style: TextStyle(fontSize: 22),
         ),
         actions: <Widget>[
+          //IconButton(
+          //icon: const Icon(Icons.share),
+          //onPressed: () {},
+          //),
           IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {},
+            icon: const Icon(Icons.note_add),
+            onPressed: () {
+              _showNoteDialog();
+            },
           ),
         ],
       ),
@@ -375,5 +387,75 @@ class _PDFScreen extends State<PDFScreen> with WidgetsBindingObserver {
         ],
       ),
     );
+  }
+
+  void _showNoteDialog() {
+    TextEditingController noteController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Ghi chú"),
+          content: Container(
+            width: double.maxFinite,
+            child: TextField(
+              controller: noteController,
+              maxLines: null, // Cho phép nhiều dòng
+              decoration: InputDecoration(
+                hintText: "Nhập ghi chú của bạn",
+                contentPadding: EdgeInsets.all(16.0),
+              ),
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                _saveNoteToDatabase(noteController.text);
+                Navigator.of(context).pop();
+              },
+              child: Text("Lưu"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Hủy"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _saveNoteToDatabase(String note) async {
+    int loggedInUserId =
+        Provider.of<AuthProvider>(context, listen: false).userId;
+
+    if (widget.documentId != null) {
+      final url = Uri.parse(ApiUrls.saveNoteUrl);
+      final response = await http.post(
+        url,
+        body: {
+          'user_id': loggedInUserId.toString(),
+          'document_id': widget.documentId!,
+          'note': note,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Note saved successfully');
+        Fluttertoast.showToast(
+          msg: "Đã lưu ghi chú!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          fontSize: 16.0,
+        );
+      } else {
+        print('Failed to save note. HTTP error: ${response.statusCode}');
+      }
+    } else {
+      print('Document ID is null');
+    }
   }
 }

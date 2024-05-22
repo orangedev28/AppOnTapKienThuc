@@ -1,8 +1,8 @@
 import 'package:app_ontapkienthuc/autoquiz/auto_createquiz.dart';
+import 'package:app_ontapkienthuc/quiz/quiz.dart';
 import 'package:app_ontapkienthuc/ui/background/background.dart';
 import 'package:flutter/material.dart';
 import 'package:app_ontapkienthuc/document/viewpdf.dart';
-import 'package:app_ontapkienthuc/subject/subject_list.dart';
 import 'package:app_ontapkienthuc/video/watch_video.dart';
 
 class MenuHome extends StatelessWidget {
@@ -26,13 +26,14 @@ class MenuHome extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  SizedBox(height: 16.0),
                   Expanded(
                     child: RowButton(
                       label: "Kiểm Tra",
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => SubjectList(),
+                            builder: (context) => SubjectListForQuizzes(),
                           ),
                         );
                       },
@@ -64,21 +65,6 @@ class MenuHome extends StatelessWidget {
                       },
                     ),
                   ),
-                  /*
-                  SizedBox(height: 16.0),
-                  Expanded(
-                    child: RowButton(
-                      label: "Bài Viết",
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => PDFList(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  */
                   SizedBox(height: 16.0),
                   Expanded(
                     child: RowButton(

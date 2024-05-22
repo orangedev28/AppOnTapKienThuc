@@ -54,6 +54,17 @@ class AboutUs extends StatelessWidget {
                     ),
                   ],
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.email),
+                    SizedBox(width: 5, height: 5),
+                    Text(
+                      "bienhuynhcongkhang@gmail.com",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
