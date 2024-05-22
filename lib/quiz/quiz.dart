@@ -335,7 +335,7 @@ class _QuizAppState extends State<QuizApp> {
 
   Future<String> getChatbotResponse(
       String question, String correctAnswer) async {
-    final String openaiApiKey = 'upGithub';
+    //final String openaiApiKey = 'upGithub';
     final String openaiApiEndpoint =
         'https://api.openai.com/v1/chat/completions';
 
