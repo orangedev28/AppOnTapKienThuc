@@ -1,5 +1,5 @@
 class AppConfig {
-  static const String baseUrl = "http://10.12.166.117:8080/localconnect/";
+  static const String baseUrl = "http://192.168.1.71:8080/localconnect/";
 }
 
 class ApiUrls {
