@@ -7,6 +7,14 @@ import 'package:app_ontapkienthuc/main.dart';
 import 'package:provider/provider.dart';
 import "package:fluttertoast/fluttertoast.dart";
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// Load .env file
+await dotenv.load(fileName: ".env");
+
+// Use the API key from the environment variable
+final String openaiApiKey = dotenv.env['OPENAI_API_KEY']!;
+
 class SubjectListForQuizzes extends StatefulWidget {
   @override
   _SubjectListState createState() => _SubjectListState();
@@ -333,54 +341,51 @@ class _QuizAppState extends State<QuizApp> {
     return (score / questions.length) * 10;
   }
 
-  Future<String> getChatbotResponse(
-      String question, String correctAnswer) async {
-    //
-    final String openaiApiEndpoint =
-        'https://api.openai.com/v1/chat/completions';
+  Future<String> getChatbotResponse(String question, String correctAnswer) async {
+  final String openaiApiKey = dotenv.env['OPENAI_API_KEY']!;
+  final String openaiApiEndpoint = 'https://api.openai.com/v1/chat/completions';
 
-    final Map<String, dynamic> requestData = {
-      'model': 'gpt-3.5-turbo-0613',
-      'messages': [
-        {
-          'role': 'user',
-          'content':
-              '$correctAnswer Đây là đáp án đúng cho câu hỏi: $question Hãy giải thích thêm giúp tôi để có thể hiểu rõ hơn về câu này, nhưng giải thích ngắn gọn thôi nhé!'
-        }
-      ],
-      'max_tokens': 1000, // Số lượng token tối đa trong câu trả lời
-    };
-
-    final response = await http.post(
-      Uri.parse(openaiApiEndpoint),
-      headers: {
-        'Content-Type': 'application/json',
-        //
-        'Accept-Charset': 'UTF-8', // Thêm header Accept-Charset
-      },
-      body: json.encode(requestData),
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData =
-          json.decode(utf8.decode(response.bodyBytes));
-
-      // Kiểm tra nếu có thông tin trả lời từ ChatGPT
-      if (responseData.containsKey('choices') &&
-          responseData['choices'].isNotEmpty &&
-          responseData['choices'][0].containsKey('message') &&
-          responseData['choices'][0]['message'].containsKey('content')) {
-        // Lấy nội dung của câu trả lời từ phản hồi
-        final String chatbotResponse =
-            responseData['choices'][0]['message']['content'];
-        return chatbotResponse;
-      } else {
-        throw Exception('No response content found');
+  final Map<String, dynamic> requestData = {
+    'model': 'gpt-3.5-turbo-0613',
+    'messages': [
+      {
+        'role': 'user',
+        'content':
+            '$correctAnswer Đây là đáp án đúng cho câu hỏi: $question Hãy giải thích thêm giúp tôi để có thể hiểu rõ hơn về câu này, nhưng giải thích ngắn gọn thôi nhé!'
       }
+    ],
+    'max_tokens': 1000,
+  };
+
+  final response = await http.post(
+    Uri.parse(openaiApiEndpoint),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $openaiApiKey',
+      'Accept-Charset': 'UTF-8',
+    },
+    body: json.encode(requestData),
+  );
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> responseData =
+        json.decode(utf8.decode(response.bodyBytes));
+
+    if (responseData.containsKey('choices') &&
+        responseData['choices'].isNotEmpty &&
+        responseData['choices'][0].containsKey('message') &&
+        responseData['choices'][0]['message'].containsKey('content')) {
+      final String chatbotResponse =
+          responseData['choices'][0]['message']['content'];
+      return chatbotResponse;
     } else {
-      throw Exception('Failed to communicate with OpenAI');
+      throw Exception('No response content found');
     }
+  } else {
+    throw Exception('Failed to communicate with OpenAI');
   }
+}
+
 
   void showExplanationDialog(
       BuildContext context, String question, String correctAnswer) async {
